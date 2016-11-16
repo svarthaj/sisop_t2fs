@@ -1,0 +1,5 @@
+*.swp
+*.out
+*.o
+!lib/apidisk.o
+!lib/bitmap2.o
