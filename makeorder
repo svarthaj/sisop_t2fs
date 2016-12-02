@@ -1,0 +1,144 @@
+all: create delete seek write read truncate close mkdir rmdir opendir closedir
+
+open_files_struct:
+
+dirent_struct:
+
+inode_struct:
+
+create: split_path generic_create open
+	@echo $@
+
+delete: split_path generic_delete
+	@echo $@
+
+open: split_path generic_open
+
+seek: open_files_struct dirent_struct
+	@echo $@
+
+write: open_files_struct inode_write dirent_struct update_dirent
+	@echo $@
+
+read: open_files_struct inode_read dirent_struct
+	@echo $@
+
+truncate: open_files_struct dirent_struct inode_invalidate update_dirent
+	@echo $@
+
+close: generic_close
+	@echo $@
+
+mkdir: split_path generic_create opendir
+	@echo $@
+
+rmdir: split_path generic_delete
+	@echo $@
+
+opendir: split_path generic_open
+	@echo $@
+
+closedir: generic_close
+	@echo $@
+
+generic_create: find_dirent dirent_struct new_inode new_dirent inode_find_free_dirent inode_write dirent_to_bytes
+	@echo $@
+
+generic_delete: dirent_struct find_dirent inode_invalidate inode_write
+	@echo $@
+
+generic_open: dirent_struct find_dirent create_open_file
+	@echo $@
+
+generic_close: remove_open_file
+	@echo $@
+
+new_inode:
+	@echo $@
+
+new_data_block:
+	@echo $@
+
+new_index_block: new_data_block read_block write_block pointer_to_bytes
+	@echo $@
+
+inode_follow_once: read_block bytes_to_pointer
+	@echo $@
+
+inode_follow_twice: read_block bytes_to_pointer inode_follow_once
+	@echo $@
+
+inode_get_block_number: inode_follow_once inode_follow_twice
+	@echo $@
+
+inode_get_index_block_number: inode_follow_once
+	@echo $@
+
+inode_add_block: inode_add_block_direct inode_add_block_single_ind inode_add_block_double_ind
+	@echo $@
+
+inode_add_block_direct: new_index_block update_inode
+	@echo $@
+
+inode_add_block_single_ind: new_index_block add_pointer new_data_block update_inode
+	@echo $@
+
+inode_add_block_double_ind: new_index_block inode_follow_once new_data_block update_inode
+	@echo $@
+
+inode_read: get_inode inode_get_block_number read_block
+	@echo $@
+
+inode_write: get_inode inode_get_block_number read_block write_block
+	@echo $@
+
+inode_invalidate: inode_get_index_block_number read_block pointer_to_bytes write_block
+	@echo $@
+
+inode_find_dirent: inode_read bytes_to_dirent
+	@echo $@
+
+inode_find_free_dirent: inode_read bytes_to_dirent
+	@echo $@
+
+bytes_to_dirent:
+	@echo $@
+
+dirent_to_bytes:
+	@echo $@
+
+bytes_to_pointer:
+	@echo $@
+
+pointer_to_bytes:
+	@echo $@
+
+new_dirent:
+	@echo $@
+
+update_dirent: dirent_to_bytes inode_write
+	@echo $@
+
+split_path:
+	@echo $@
+
+create_open_file: open_files_struct
+	@echo $@
+
+destroy_open_file: open_files_struct
+	@echo $@
+
+find_dirent: inode_find_dirent open_files_struct
+	@echo $@
+
+read_block:
+	@echo $@
+
+write_block:
+	@echo $@
+
+get_inode:
+	@echo $@
+
+remove_open_file:
+	@echo $@
