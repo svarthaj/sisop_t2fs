@@ -4,6 +4,26 @@
 #include "t2fs.h"
 
 /**
+ * print_inode() - print inode structure to stderr
+ * @sb: pointer to the inode structure
+ *
+ * Print the fields of a inode structure to the stderr.
+ *
+ * Return:
+ */
+void print_inode(struct t2fs_inode *inode);
+
+/**
+ * print_superblock() - print superblock structure to stderr
+ * @sb: pointer to the superblock structure
+ *
+ * Print the fields of a superblock structure to the stderr.
+ *
+ * Return:
+ */
+void print_superblock(struct t2fs_superbloco *sb);
+
+/**
  * umax() - return maximum between two numbers
  * @a: a number
  * @b: a number

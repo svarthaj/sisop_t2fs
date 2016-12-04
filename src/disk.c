@@ -6,24 +6,6 @@
 #include "utils.h"
 #include "disk.h"
 
-void print_superblock (struct t2fs_superbloco *sb) {
-    flogdebug("id: %c%c%c%c", sb->id[0], sb->id[1], sb->id[2], sb->id[3]);
-    flogdebug("version: %x", sb->version);
-    flogdebug("superBlockSize: %hu", sb->superblockSize);
-    flogdebug("freeBlocksBitmapSize: %hu", sb->freeBlocksBitmapSize);
-    flogdebug("freeInodeBitmapSize: %hu", sb->freeInodeBitmapSize);
-    flogdebug("inodeAreaSize: %hu", sb->inodeAreaSize);
-    flogdebug("blockSize: %hu", sb->blockSize);
-    flogdebug("diskSize: %u", sb->diskSize);
-}
-
-void print_inode (struct t2fs_inode *inode) {
-    flogdebug("dataPtr[0]: %d", inode->dataPtr[0]);
-    flogdebug("dataPtr[1]: %d", inode->dataPtr[1]);
-    flogdebug("singleIndPtr: %d", inode->singleIndPtr);
-    flogdebug("doubleIndPtr: %d", inode->doubleIndPtr);
-}
-
 int fetch_superblock (struct t2fs_superbloco *sb) {
     BYTE *buffer = alloc_buffer(1);
 

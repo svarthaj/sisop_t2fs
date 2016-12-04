@@ -18,16 +18,6 @@
 int fetch_superblock(struct t2fs_superbloco *sb);
 
 /**
- * print_superblock() - print superblock structure to stderr
- * @sb: pointer to the superblock structure
- *
- * Print the fields of a superblock structure to the stderr.
- *
- * Return:
- */
-void print_superblock(struct t2fs_superbloco *sb);
-
-/**
  * fetch_inode() - fill inode structure
  * @inode_number: the number of the inode in the disk
  * @inode: pointer to an inode structure
@@ -43,16 +33,6 @@ int fetch_inode(
 	struct t2fs_inode *inode,
 	struct t2fs_superbloco *sb
 );
-
-/**
- * print_inode() - print inode structure to stderr
- * @sb: pointer to the inode structure
- *
- * Print the fields of a inode structure to the stderr.
- *
- * Return:
- */
-void print_inode(struct t2fs_inode *inode);
 
 /**
  * fetch_block() - fill a buffer with the contents of a block
