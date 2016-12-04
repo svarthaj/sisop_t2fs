@@ -2,6 +2,13 @@
 #include "utils.h"
 #include "t2fs.h"
 
+void test_max_min() {
+	assert(umax(1, 0) == 1);
+	assert(umax(0, 0) == 0);
+	assert(umin(1, 0) == 0);
+	assert(umin(1, 1) == 1);
+}
+
 void test_reverse_endianess() {
 	BYTE foo[] = {2, 1, 0};
 	BYTE bar[] = {2, 1, 0, 10};
@@ -42,5 +49,6 @@ int main(int argc, const char *argv[])
 	test_reverse_endianess();
 	test_bytes_to_word();
 	test_bytes_to_dword();
+	test_max_min();
 	return 0;
 }

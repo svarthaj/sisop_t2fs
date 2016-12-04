@@ -4,6 +4,24 @@
 #include "t2fs.h"
 
 /**
+ * umax() - return maximum between two numbers
+ * @a: a number
+ * @b: a number
+ *
+ * Return: the maximum of a and b. They must be unsigned integers.
+ */
+unsigned int umax(unsigned int a, unsigned int b);
+
+/**
+ * umin() - return minimum between two numbers
+ * @a: a number
+ * @b: a number
+ *
+ * Return: the minimum of a and b. They must be unsigned integers.
+ */
+unsigned int umin(unsigned int a, unsigned int b);
+
+/**
  * alloc_buffer() - allocate buffer
  * @size: size of the buffer in sectors
  *

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "logging.h"
 #include "disk.h"
+#include "utils.h"
 #include "inode.h"
 #include "t2fs.h"
 
@@ -46,6 +47,30 @@ void test_inode_get_block_number() {
 	//assert(inode_get_block_number(&inode, last, &sb) == -2);
 	logwarning("ignore warning bellow");
 	assert(inode_get_block_number(&inode, past, &sb) == -3);
+}
+
+void test_inode_read() {
+	struct t2fs_superbloco sb = get_suberblock();
+	struct t2fs_inode inode;
+
+	inode.dataPtr[0] = 100;
+	inode.dataPtr[1] = INVALID_PTR;
+
+	BYTE *buffer = alloc_buffer(sb.blockSize);
+
+
+	unsigned int ppb = sb.blockSize*SECTOR_SIZE/PTR_SIZE;
+	unsigned int max_file_size = SECTOR_SIZE*sb.blockSize*(2 + ppb + ppb*ppb);
+
+	int first = 0;
+	int past = sb.inodeAreaSize*(SECTOR_SIZE/INODE_BYTE_SIZE);
+	assert(inode_read(first, 0, 10, buffer, &sb) == 10);
+	logwarning("ignore warning bellow");
+	assert(inode_read(past, 0, 10, buffer, &sb) == -1);
+	logwarning("ignore warning bellow");
+	assert(inode_read(first, max_file_size, 10, buffer, &sb) == -1);
+
+	free(buffer);
 }
 
 int main(int argc, const char *argv[])

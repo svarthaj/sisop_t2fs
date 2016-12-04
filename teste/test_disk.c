@@ -23,7 +23,7 @@ void test_fetch_block() {
 
 	assert(fetch_block(0, block, &sb) == 0);
 	assert(fetch_block(last, block, &sb) == 0);
-	logwarning("ignore warning bellow");
+	logwarning("ignore warning below");
 	assert(fetch_block(past, block, &sb) == -1);
 
 	free(block);
@@ -44,6 +44,13 @@ void test_fetch_inode() {
 	}
 
 	assert(root.dataPtr[0] >= 0);
+
+	struct t2fs_inode inode;
+	int num_inodes = sb.inodeAreaSize*(SECTOR_SIZE/INODE_BYTE_SIZE);
+	logwarning("ignore warning below");
+	assert(fetch_inode(-1, &inode, &sb));
+	logwarning("ignore warning below");
+	assert(fetch_inode(num_inodes, &inode, &sb) == -1);
 }
 
 void test_fetch_superblock() {

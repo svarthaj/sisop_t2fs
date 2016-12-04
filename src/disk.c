@@ -29,6 +29,7 @@ int fetch_superblock (struct t2fs_superbloco *sb) {
 
     if (read_sector(0, buffer) != 0) {
         logerror("fetch_superblock: reading sector");
+		free(buffer);
 		exit(1);
     }
 
@@ -59,29 +60,33 @@ int fetch_superblock (struct t2fs_superbloco *sb) {
  * Return: 0 if succeeds, -1 otherwise.
  */
 int fetch_inode(
-	unsigned int inode_number,
+	int inode_number,
 	struct t2fs_inode *inode,
 	struct t2fs_superbloco *sb
 ) {
+	unsigned int inodes_per_sector = (SECTOR_SIZE/INODE_BYTE_SIZE);
+	if (inode_number < 0 || inode_number >= sb->inodeAreaSize*inodes_per_sector) {
+		logwarning("fetch_inode: invalid inode number");
+		return -1;
+	}
+
 	BYTE *buffer = alloc_buffer(1);
 
-	unsigned int inodes_per_sector = (SECTOR_SIZE/INODE_DISK_SIZE);
 	unsigned int base = sb->superblockSize + sb->freeBlocksBitmapSize + sb->freeInodeBitmapSize;
 	unsigned int sector = base + inode_number/inodes_per_sector;
 
     if (read_sector(sector, buffer) != 0) {
         logerror("fetch_inode: reading sector");
-		exit(1);
+		free(buffer);
+		return -1;
     }
 
-	unsigned int offset = (inode_number*INODE_DISK_SIZE)%inodes_per_sector;
+	unsigned int offset = inode_number%inodes_per_sector;
 
 	inode->dataPtr[0] = bytes_to_int(buffer + offset);
 	inode->dataPtr[1] = bytes_to_int(buffer + offset + PTR_SIZE);
 	inode->singleIndPtr = bytes_to_int(buffer + offset + 2*PTR_SIZE);
 	inode->doubleIndPtr = bytes_to_int(buffer + offset + 3*PTR_SIZE);
-
-	print_inode(inode);
 
 	free(buffer);
 
