@@ -72,4 +72,15 @@ DWORD bytes_to_dword(BYTE *buffer);
  */
 int bytes_to_int(BYTE *buffer);
 
+/**
+ * bytes_to_record() - return record represented by bytes array
+ * @buffer: pointer to the buffer containing the record data
+ *
+ * Return the record structure represented by the bytes array taken directly
+ * from disk. The bytes array must be at least 64 bytes long.
+ *
+ * Return: a record structure.
+ */
+struct t2fs_record bytes_to_record(BYTE *buffer);
+
 #endif /* ifndef UTILS_H */

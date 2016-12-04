@@ -78,7 +78,7 @@ WORD bytes_to_word(BYTE *buffer) {
 	memcpy(tmp, buffer, 2);
 	reverse_endianess(tmp, 2);
 
-	return (WORD) ((tmp[0]<<8) + tmp[1]);
+	return ((WORD)tmp[0]<<8) + (WORD)tmp[1];
 }
 
 /**
@@ -94,7 +94,7 @@ DWORD bytes_to_dword(BYTE *buffer) {
 	memcpy(tmp, buffer, 4);
 	reverse_endianess(tmp, 4);
 
-	return (DWORD) ((tmp[0]<<24) + (tmp[1]<<16) + (tmp[2]<<8) + tmp[0]);
+	return ((DWORD)tmp[0]<<24) + ((DWORD)tmp[1]<<16) + ((DWORD)tmp[2]<<8) + (DWORD)tmp[3];
 }
 
 /**
@@ -110,5 +110,26 @@ int bytes_to_int(BYTE *buffer) {
 	memcpy(tmp, buffer, 4);
 	reverse_endianess(tmp, 4);
 
-	return (int) ((tmp[0]<<24) + (tmp[1]<<16) + (tmp[2]<<8) + tmp[0]);
+	return (int)(tmp[0]<<24) + (int)(tmp[1]<<16) + (int)(tmp[2]<<8) + (int)tmp[3];
+}
+
+/**
+ * bytes_to_record() - return record represented by bytes array
+ * @buffer: pointer to the buffer containing the record data
+ *
+ * Return the record structure represented by the bytes array taken directly
+ * from disk. The bytes array must be at least 64 bytes long.
+ *
+ * Return: a record structure.
+ */
+struct t2fs_record bytes_to_record(BYTE *buffer) {
+	struct t2fs_record record;
+
+	record.TypeVal = buffer[0];
+	memcpy(record.name, buffer + 1, 31);
+	record.blocksFileSize = bytes_to_dword(buffer + 32);
+	record.bytesFileSize = bytes_to_dword(buffer + 36);
+	record.inodeNumber = bytes_to_int(buffer + 40);
+
+	return record;
 }
