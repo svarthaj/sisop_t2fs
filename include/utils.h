@@ -4,6 +4,16 @@
 #include "t2fs.h"
 
 /**
+ * alloc_buffer() - allocate buffer
+ * @size: size of the buffer in sectors
+ *
+ * Return a pointer to a buffer of size `size`*SECTOR_SIZE.
+ *
+ * Return: the pointer to the allocated area.
+ */
+BYTE *alloc_buffer(int size);
+
+/**
  * reverse_endian() - reverse the endianess of a buffer
  * @buffer: pointer to the buffer
  * @len: length of the buffer

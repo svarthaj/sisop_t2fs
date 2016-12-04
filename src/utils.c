@@ -1,5 +1,26 @@
+#include <stdlib.h>
 #include <string.h>
+#include "logging.h"
 #include "utils.h"
+
+/**
+ * alloc_buffer() - allocate buffer
+ * @size: size of the buffer in sectors
+ *
+ * Return a pointer to a buffer of size `size`*SECTOR_SIZE.
+ *
+ * Return: the pointer to the allocated area.
+ */
+BYTE *alloc_buffer(int size) {
+	BYTE *buffer = (BYTE *)malloc(size*SECTOR_SIZE*sizeof(BYTE));
+
+	if (!buffer) {
+		logerror("alloc_buffer: allocating buffer");
+		exit(1);
+	}
+
+	return buffer;
+}
 
 /**
  * reverse_endian() - reverse the endianess of a buffer

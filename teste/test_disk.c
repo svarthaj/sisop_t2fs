@@ -23,6 +23,7 @@ void test_fetch_block() {
 
 	assert(fetch_block(0, block, &sb) == 0);
 	assert(fetch_block(last, block, &sb) == 0);
+	logwarning("ignore warning bellow");
 	assert(fetch_block(past, block, &sb) == -1);
 
 	free(block);

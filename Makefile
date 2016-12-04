@@ -1,5 +1,5 @@
-FILES := logging utils disk t2fs
-TESTS := utils disk t2fs
+FILES := logging utils disk t2fs inode
+TESTS := utils disk t2fs inode
 
 OBJECTS := lib/apidisk.o lib/bitmap2.o $(patsubst %,bin/%.o,$(FILES))
 TESTS := $(patsubst %,teste/test_%.out,$(TESTS))

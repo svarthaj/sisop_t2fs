@@ -1,11 +1,10 @@
-#define INODE_DISK_SIZE 4
-
 #include <stdlib.h>
 #include <string.h>
 #include "logging.h"
 #include "apidisk.h"
 #include "t2fs.h"
 #include "utils.h"
+#include "disk.h"
 
 void print_superblock (struct t2fs_superbloco *sb) {
     flogdebug("id: %c%c%c%c", sb->id[0], sb->id[1], sb->id[2], sb->id[3]);
@@ -26,12 +25,7 @@ void print_inode (struct t2fs_inode *inode) {
 }
 
 int fetch_superblock (struct t2fs_superbloco *sb) {
-    BYTE *buffer = (BYTE *)malloc(SECTOR_SIZE*sizeof(BYTE));
-
-	if (!buffer) {
-		logerror("fetch_superblock: allocating buffer");
-		exit(1);
-	}
+    BYTE *buffer = alloc_buffer(1);
 
     if (read_sector(0, buffer) != 0) {
         logerror("fetch_superblock: reading sector");
@@ -69,12 +63,7 @@ int fetch_inode(
 	struct t2fs_inode *inode,
 	struct t2fs_superbloco *sb
 ) {
-	BYTE *buffer = (BYTE *)malloc(SECTOR_SIZE*sizeof(BYTE));
-
-	if (!buffer) {
-		logerror("fetch_inode: allocating buffer");
-		exit(1);
-	}
+	BYTE *buffer = alloc_buffer(1);
 
 	unsigned int inodes_per_sector = (SECTOR_SIZE/INODE_DISK_SIZE);
 	unsigned int base = sb->superblockSize + sb->freeBlocksBitmapSize + sb->freeInodeBitmapSize;
@@ -88,9 +77,9 @@ int fetch_inode(
 	unsigned int offset = (inode_number*INODE_DISK_SIZE)%inodes_per_sector;
 
 	inode->dataPtr[0] = bytes_to_int(buffer + offset);
-	inode->dataPtr[1] = bytes_to_int(buffer + offset + 4);
-	inode->singleIndPtr = bytes_to_int(buffer + offset + 8);
-	inode->doubleIndPtr = bytes_to_int(buffer + offset + 12);
+	inode->dataPtr[1] = bytes_to_int(buffer + offset + PTR_SIZE);
+	inode->singleIndPtr = bytes_to_int(buffer + offset + 2*PTR_SIZE);
+	inode->doubleIndPtr = bytes_to_int(buffer + offset + 3*PTR_SIZE);
 
 	print_inode(inode);
 

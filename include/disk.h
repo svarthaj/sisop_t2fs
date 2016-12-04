@@ -3,6 +3,9 @@
 
 #include "t2fs.h"
 
+#define PTR_SIZE 4
+#define INODE_DISK_SIZE 4
+
 /**
  * fetch_superblock() - fill superblock structure
  * @sb: pointer to the superblock structure
@@ -36,7 +39,7 @@ void print_superblock(struct t2fs_superbloco *sb);
  * Return: 0 if succeeds, -1 otherwise.
  */
 int fetch_inode(
-	int inode_number,
+	unsigned int inode_number,
 	struct t2fs_inode *inode,
 	struct t2fs_superbloco *sb
 );
