@@ -3,7 +3,8 @@
 
 #include "t2fs.h"
 
-#define PTR_SIZE 4
+#define RECORD_BYTE_SIZE 64
+#define PTR_BYTE_SIZE 4
 #define INODE_BYTE_SIZE 16
 
 /**

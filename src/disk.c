@@ -66,9 +66,9 @@ int fetch_inode(
 	unsigned int offset = inode_number%inodes_per_sector;
 
 	inode->dataPtr[0] = bytes_to_int(buffer + offset);
-	inode->dataPtr[1] = bytes_to_int(buffer + offset + PTR_SIZE);
-	inode->singleIndPtr = bytes_to_int(buffer + offset + 2*PTR_SIZE);
-	inode->doubleIndPtr = bytes_to_int(buffer + offset + 3*PTR_SIZE);
+	inode->dataPtr[1] = bytes_to_int(buffer + offset + PTR_BYTE_SIZE);
+	inode->singleIndPtr = bytes_to_int(buffer + offset + 2*PTR_BYTE_SIZE);
+	inode->doubleIndPtr = bytes_to_int(buffer + offset + 3*PTR_BYTE_SIZE);
 
 	free(buffer);
 

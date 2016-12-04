@@ -22,6 +22,26 @@ void print_inode (struct t2fs_inode *inode) {
 }
 
 /**
+ * print_record() - print record structure to stderr
+ * @record: pointer to record struct
+ *
+ * Prints the fields of a record
+ *
+ * Return:
+ */
+void print_record(struct t2fs_record *record) {
+	char name[32];
+	strncpy(name, record->name, 31);
+	name[31] = '\0';
+
+    flogdebug("TypeVal: %d", record->TypeVal);
+    flogdebug("name: %s", name);
+    flogdebug("blocksFileSize: %u", record->blocksFileSize);
+    flogdebug("bytesFileSize: %u", record->bytesFileSize);
+    flogdebug("inodeNumber: %d", record->inodeNumber);
+}
+
+/**
  * umax() - return maximum between two numbers
  * @a: a number
  * @b: a number

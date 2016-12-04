@@ -24,6 +24,16 @@ void print_inode(struct t2fs_inode *inode);
 void print_superblock(struct t2fs_superbloco *sb);
 
 /**
+ * print_record() - print record structure to stderr
+ * @record: pointer to record struct
+ *
+ * Prints the fields of a record
+ *
+ * Return:
+ */
+void print_record(struct t2fs_record *record);
+
+/**
  * umax() - return maximum between two numbers
  * @a: a number
  * @b: a number

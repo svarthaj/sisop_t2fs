@@ -36,7 +36,7 @@ void test_inode_get_block_number() {
 	inode.dataPtr[0] = 100;
 	inode.dataPtr[1] = INVALID_PTR;
 
-	unsigned int ppb = sb.blockSize*SECTOR_SIZE/PTR_SIZE;
+	unsigned int ppb = sb.blockSize*SECTOR_SIZE/PTR_BYTE_SIZE;
 
 	unsigned int second = 1;
 	unsigned int last = (2 + ppb + ppb*ppb) - 1;
@@ -59,16 +59,35 @@ void test_inode_read() {
 	BYTE *buffer = alloc_buffer(sb.blockSize);
 
 
-	unsigned int ppb = sb.blockSize*SECTOR_SIZE/PTR_SIZE;
+	unsigned int ppb = sb.blockSize*SECTOR_SIZE/PTR_BYTE_SIZE;
 	unsigned int max_file_size = SECTOR_SIZE*sb.blockSize*(2 + ppb + ppb*ppb);
 
 	int first = 0;
 	int past = sb.inodeAreaSize*(SECTOR_SIZE/INODE_BYTE_SIZE);
 	assert(inode_read(first, 0, 10, buffer, &sb) == 10);
 	logwarning("ignore warning bellow");
+	assert(inode_read(-1, 0, 10, buffer, &sb) == -1);
+	logwarning("ignore warning bellow");
 	assert(inode_read(past, 0, 10, buffer, &sb) == -1);
 	logwarning("ignore warning bellow");
 	assert(inode_read(first, max_file_size, 10, buffer, &sb) == -1);
+
+	free(buffer);
+}
+
+void test_inode_find_record() {
+	struct t2fs_superbloco sb = get_suberblock();
+	BYTE *buffer = alloc_buffer(sb.blockSize);
+
+	struct t2fs_record record;
+	assert(inode_find_record(0, "poqwpoqwpoqwpoqwqwpopoqw", &record, &sb) >= 0);
+	assert(record.TypeVal == 0x00);
+	logwarning("ignore warning bellow");
+	assert(inode_find_record(-1, "arq", &record, &sb) == -1);
+	assert(inode_find_record(0, "arq", &record, &sb) == 0);
+	assert(record.TypeVal == 0x01);
+	assert(inode_find_record(0, "sub", &record, &sb) == RECORD_BYTE_SIZE);
+	assert(record.TypeVal == 0x02);
 
 	free(buffer);
 }
@@ -78,6 +97,7 @@ int main(int argc, const char *argv[])
 	test_inode_follow_once();
 	test_inode_follow_twice();
 	test_inode_get_block_number();
+	test_inode_find_record();
 
 	return 0;
 }

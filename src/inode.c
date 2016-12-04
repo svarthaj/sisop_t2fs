@@ -31,7 +31,7 @@ int inode_follow_once(
 	BYTE *index_block = alloc_buffer(sb->blockSize);
 
 	fetch_block(pointer, index_block, sb);
-	int next_block = bytes_to_int(index_block + offset%PTR_SIZE);
+	int next_block = bytes_to_int(index_block + offset%PTR_BYTE_SIZE);
 
 	free(index_block);
 
@@ -59,12 +59,12 @@ int inode_follow_twice(
 		return -2;
 	}
 
-	unsigned int ppb = sb->blockSize*SECTOR_SIZE/PTR_SIZE;
+	unsigned int ppb = sb->blockSize*SECTOR_SIZE/PTR_BYTE_SIZE;
 	BYTE *index_block = alloc_buffer(sb->blockSize);
 
 	fetch_block(pointer, index_block, sb);
 
-	int next_pointer = bytes_to_int(index_block + (offset/ppb)*PTR_SIZE);
+	int next_pointer = bytes_to_int(index_block + (offset/ppb)*PTR_BYTE_SIZE);
 
 	free(index_block);
 
@@ -91,7 +91,7 @@ int inode_get_block_number(
 	unsigned int dir = NUM_INODE_DIRECT_PTRS;
 	unsigned int sind = NUM_INODE_SINGLE_IND_PTRS;
 	unsigned int dind = NUM_INODE_DOUBLE_IND_PTRS;
-	unsigned int ppb = sb->blockSize*SECTOR_SIZE/PTR_SIZE;
+	unsigned int ppb = sb->blockSize*SECTOR_SIZE/PTR_BYTE_SIZE;
 
 	if (offset < dir) {
 		if (inode->dataPtr[offset] != INVALID_PTR) {
@@ -151,7 +151,7 @@ int inode_read(
 
 	unsigned int base = 0;
 	unsigned int inf = offset%block_byte_size;
-	unsigned int len = umin(size_left, sb->blockSize);
+	unsigned int len = umin(size_left, sb->blockSize*SECTOR_SIZE);
 	memcpy(buffer + base, block + inf, len);
 
 	bytes_read += len;
@@ -169,7 +169,7 @@ int inode_read(
 		}
 
 		inf = 0;
-		len = umin(size_left, sb->blockSize);
+		len = umin(size_left, sb->blockSize*SECTOR_SIZE);
 		memcpy(buffer + base, block + inf, len);
 
 		bytes_read += len;
@@ -180,4 +180,60 @@ int inode_read(
 	free(block);
 
 	return bytes_read;
+}
+
+/**
+ * inode_find_record() - find a record in an inode
+ * @index: inode index in the disk
+ * @name: null terminated string containing record name
+ * @record: pointer to a record to be filled with the entry
+ * @sb: pointer to superblock structure
+ *
+ * Searches in the inode for a directory entry with a specific name. The string
+ * `name` must be less than 31 characters long, not including the terminating
+ * null character.
+ *
+ * Return: the offset of the record inside the inode or -1 if there is none.
+ */
+int inode_find_record(
+	int index,
+	char *name,
+	struct t2fs_record *record,
+	struct t2fs_superbloco *sb
+){
+	if (index < 0) {
+		logwarning("inode_find_record: invalid inode index");
+		return -1;
+	}
+
+	BYTE *bytes = (BYTE *)malloc(RECORD_BYTE_SIZE*sizeof(BYTE));
+
+	if (!bytes) {
+		logerror("inode_find_record: allocating memory");
+		return -1;
+	}
+
+	unsigned int name_len = strlen(name);
+
+	unsigned int offset = 0;
+	int bytes_read = inode_read(index, offset, RECORD_BYTE_SIZE, bytes, sb);
+	while (bytes_read == RECORD_BYTE_SIZE) {
+		*record = bytes_to_record(bytes);
+		char is_file = (record->TypeVal == 0x01);
+		char is_dir = (record->TypeVal == 0x02);
+		char match = (strncmp(record->name, name, name_len) == 0);
+
+		if ((is_file || is_dir) && match) {
+			free(bytes);
+			return offset;
+		} else {
+			offset += RECORD_BYTE_SIZE;
+		}
+
+		bytes_read = inode_read(index, offset, RECORD_BYTE_SIZE, bytes, sb);
+	}
+
+	free(bytes);
+	record->TypeVal = 0x00; /* no dirent found */
+	return offset;
 }

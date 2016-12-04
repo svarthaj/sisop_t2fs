@@ -79,4 +79,20 @@ int inode_read(
 	struct t2fs_superbloco *sb
 );
 
+/**
+ * inode_find_record() - find a record in an inode
+ * @index: inode index in the disk
+ * @name: string containing record name
+ *
+ * Searches in the inode for a directory entry with a specific name.
+ *
+ * Return: the offset of the record inside the inode or -1 if there is none.
+ */
+int inode_find_record(
+	int index,
+	char *name,
+	struct t2fs_record *record,
+	struct t2fs_superbloco *sb
+);
+
 #endif /* ifndef INODE_H */
