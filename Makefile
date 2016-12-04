@@ -1,22 +1,21 @@
-#
-# Makefile ESQUELETO
-#
-# DEVE ter uma regra "all" para geração da biblioteca
-# regra "clean" para remover todos os objetos gerados.
-#
-# NECESSARIO adaptar este esqueleto de makefile para suas necessidades.
-#
-# 
+FILES := logging utils disk t2fs
+TESTS := utils disk t2fs
 
-CC=gcc
-LIB_DIR=./lib
-INC_DIR=./include
-BIN_DIR=./bin
-SRC_DIR=./src
+OBJECTS := lib/apidisk.o lib/bitmap2.o $(patsubst %,bin/%.o,$(FILES))
+TESTS := $(patsubst %,teste/test_%.out,$(TESTS))
+
+CC := gcc -Wall -std=c99 -I ./include
 
 all:
 
+test: $(TESTS)
+
+teste/test_%.out: $(OBJECTS) teste/test_%.c
+	$(CC) $^ -o $@
+	./$@ && rm $@
+
+bin/%.o: src/%.c
+	$(CC) -c $^ -o $@
+
 clean:
-	rm -rf $(LIB_DIR)/*.a $(BIN_DIR)/*.o $(SRC_DIR)/*~ $(INC_DIR)/*~ *~
-
-
+	rm -rf lib/*.a bin/*.o src/*~ include/*~ teste/*.out *~
