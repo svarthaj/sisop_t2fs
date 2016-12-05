@@ -147,4 +147,6 @@ struct t2fs_record bytes_to_record(BYTE *buffer);
 //
 //}
 
+struct list *split_path(char *path);
+
 #endif /* ifndef UTILS_H */

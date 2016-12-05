@@ -1,6 +1,8 @@
+#include <string.h>
 #include <assert.h>
 #include "logging.h"
 #include "utils.h"
+#include "list.h"
 #include "t2fs.h"
 
 void test_max_min() {
@@ -78,6 +80,24 @@ void test_bytes_to_record() {
 	assert(record.inodeNumber == 0x00000100);
 }
 
+void test_split_path(){
+    char *pathname = "/foo/bar/foobar/filename.txt";
+    char *broken_path = "/";
+    struct list *path_list = split_path(pathname);
+    struct list *broken_list = split_path(broken_path);
+
+    assert(strcmp(path_list->it->node, "foo") == 0);
+    next_list(path_list);
+    assert(strcmp(path_list->it->node, "bar") == 0);
+    next_list(path_list);
+    assert(strcmp(path_list->it->node, "foobar") == 0);
+    next_list(path_list);
+    assert(strcmp(path_list->it->node, "filename.txt") == 0);
+    
+    assert(broken_list->it->node == NULL);
+
+}
+
 int main(int argc, const char *argv[])
 {
 	test_reverse_endianess();
@@ -85,6 +105,8 @@ int main(int argc, const char *argv[])
 	test_bytes_to_dword();
 	test_bytes_to_int();
 	test_max_min();
-	test_bytes_to_record();
-	return 0;
+    test_bytes_to_record();
+    test_split_path();
+
+    return 0;
 }

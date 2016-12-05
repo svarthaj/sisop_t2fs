@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include "list.h"
 #include "logging.h"
 #include "utils.h"
 
@@ -171,3 +172,18 @@ struct t2fs_record bytes_to_record(BYTE *buffer) {
 
 	return record;
 }
+
+struct list* split_path(char *path){
+    struct list *path_list = create_list();
+    char *tok;
+    if(strcmp(path, "/") != 0){
+        tok = strtok(path, "/");
+        while(tok != NULL){
+            append_list(path_list, tok);
+            tok = strtok(NULL, "/");       
+        }
+        return path_list;
+    }
+    else return NULL;
+}
+
