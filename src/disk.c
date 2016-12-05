@@ -111,3 +111,26 @@ int fetch_block(
 
 	return 0;
 }
+
+int write_block(
+    unsigned int number,
+    BYTE *block,
+    struct t2fs_superbloco *sb
+) {
+	unsigned int base = sb->superblockSize + sb->freeBlocksBitmapSize + sb->freeInodeBitmapSize + sb->inodeAreaSize;
+	unsigned int offset = number*sb->blockSize;
+	
+    if (base + offset + sb->blockSize > sb->diskSize) {
+		logwarning("write_block: tried to write past end of disk");
+		return -1;
+	}
+
+	for (unsigned int i = 0; i < sb->blockSize; i++) {
+		if (write_sector(base + offset + i, block + i*SECTOR_SIZE) != 0) {
+			logerror("fetch_block: writing sector");
+			exit(1);
+		}
+	}
+
+	return 0;
+}
