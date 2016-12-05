@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include "t2fs.h"
+#include "list.h"
 
 /**
  * print_inode() - print inode structure to stderr
@@ -129,23 +130,25 @@ struct t2fs_record bytes_to_record(BYTE *buffer);
  * If the file exists and is found, `ip` will be the
  * index of the parent directory's inode, `offset` will be the offset of the
  * record inside the parent directory's inode, and `record` will be filled with
- * the file's record.
+ * the file's record. The function returns 0, in this case.
  *
  * If the parent directory exists, but the file does not, `record` will have
  * a TypeVal of 0x00, and `ip` will be the parent directory's inode number.
- * `offset` could be anything in this case.
+ * `offset` could be anything in this case, and the function returns 0.
  *
  * If the parent directory does not exist (and consequently the file does not
  * exist too), `record` will have a TypeVal of 0x00, and `ip` will be -1.
- * `offset` could be anything in this case.
+ * `offset` could be anything in this case. The function returns 0 in this case.
  *
  * Return: 0 if succeeds, -1 otherwise.
  */
-//int find_record(
-//	struct
-//) {
-//
-//}
+int find_record(
+	struct list *names,
+	struct t2fs_record *record,
+	int *ip,
+	unsigned int *offset,
+	struct t2fs_superbloco *sb
+);
 
 
 /**

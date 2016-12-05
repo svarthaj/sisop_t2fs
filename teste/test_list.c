@@ -132,7 +132,6 @@ void test_getnode_list(){
 void test_remove_list(){
     char *data1 = "foo";
     char *data2 = "bar";
-    char *data3 = "foobar";
     struct list *generic_list = create_list();
 
 	logdebug("will try to remove from empty list:");

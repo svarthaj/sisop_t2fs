@@ -3,6 +3,7 @@
 #include "logging.h"
 #include "utils.h"
 #include "list.h"
+#include "disk.h"
 #include "t2fs.h"
 
 void test_max_min() {
@@ -131,6 +132,76 @@ void test_split_path(){
     assert(broken_list == NULL);
 }
 
+void test_find_record() {
+	char arq[] = "/arq";
+	struct list *names = split_path(arq);
+	assert(names != NULL);
+
+	int parent_inode_index;
+	unsigned int offset;
+	struct t2fs_record record;
+	struct t2fs_superbloco sb;
+	fetch_superblock(&sb);
+
+	assert(find_record(
+		names,
+		&record,
+		&parent_inode_index,
+		&offset,
+		&sb
+	) == 0);
+	assert(record.TypeVal == 0x01);
+	assert(strncmp(record.name, "arq", strlen("arq")) == 0);
+	assert(parent_inode_index == 0);
+	assert(offset == 0);
+
+	char sub[] = "/sub";
+	names = split_path(sub);
+	assert(names != NULL);
+
+	assert(find_record(
+		names,
+		&record,
+		&parent_inode_index,
+		&offset,
+		&sb
+	) == 0);
+	assert(record.TypeVal == 0x02);
+	assert(strncmp(record.name, "sub", strlen("sub")) == 0);
+	assert(parent_inode_index == 0);
+	assert(offset > 0);
+
+	char nonexistent[] = "/no_such_file";
+	names = split_path(nonexistent);
+	assert(names != NULL);
+
+	logdebug("will reach end of inode");
+	assert(find_record(
+		names,
+		&record,
+		&parent_inode_index,
+		&offset,
+		&sb
+	) == 0);
+	assert(record.TypeVal == 0x00);
+	assert(parent_inode_index == 0);
+
+	char inv[] = "/no/such/path";
+	names = split_path(inv);
+	assert(names != NULL);
+
+	logdebug("will reach end of inode");
+	assert(find_record(
+		names,
+		&record,
+		&parent_inode_index,
+		&offset,
+		&sb
+	) == 0);
+	assert(record.TypeVal == 0x00);
+	assert(parent_inode_index == -1);
+}
+
 int main(int argc, const char *argv[])
 {
 	test_reverse_endianess();
@@ -141,6 +212,7 @@ int main(int argc, const char *argv[])
     test_bytes_to_record();
 	test_sane_path();
     test_split_path();
+	test_find_record();
 
     return 0;
 }

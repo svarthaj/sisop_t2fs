@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include "inode.h"
 #include "list.h"
 #include "logging.h"
 #include "utils.h"
@@ -245,4 +246,59 @@ struct list *split_path(char *path) {
 
 	first_list(path_list);
 	return path_list;
+}
+
+/**
+ * find_record() - find the record of a file
+ * @names: list with the names forming the path to the file
+ * @record: pointer to a record to be filled by the function
+ * @ip: pointer to an index to be filled by the function, it represents
+ * the parent inode index
+ * @offset: pointer to an offset to be filled by the function
+ * @sb: pointer to the superblock structure
+ *
+ * Finds the record of the file with path represented by the list of names
+ * `names`. Pythonly, '/' + '/'.join(names) would be the string representing
+ * the path to the file.
+ *
+ * If the file exists and is found, `ip` will be the
+ * index of the parent directory's inode, `offset` will be the offset of the
+ * record inside the parent directory's inode, and `record` will be filled with
+ * the file's record. The function returns 0, in this case.
+ *
+ * If the parent directory exists, but the file does not, `record` will have
+ * a TypeVal of 0x00, and `ip` will be the parent directory's inode number.
+ * `offset` could be anything in this case, and the function returns 0.
+ *
+ * If the parent directory does not exist (and consequently the file does not
+ * exist too), `record` will have a TypeVal of 0x00, and `ip` will be -1.
+ * `offset` could be anything in this case. The function returns 0 in this case.
+ *
+ * Return: 0 if succeeds, -1 otherwise.
+ */
+int find_record(
+	struct list *names,
+	struct t2fs_record *record,
+	int *ip,
+	unsigned int *offset,
+	struct t2fs_superbloco *sb
+) {
+	*ip = 0; // start on root
+
+	first_list(names);
+	inode_find_record(*ip, getnode_list(names), offset, record, sb);
+
+	next_list(names);
+	while (names->it != NULL) {
+		if (record->TypeVal == 0x00) {
+			*ip = -1;
+			*offset = 0;
+			return 0;
+		}
+
+		*ip = record->inodeNumber;
+		inode_find_record(*ip, getnode_list(names), offset, record, sb);
+	}
+
+	return 0;
 }
