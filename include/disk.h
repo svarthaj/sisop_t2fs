@@ -52,4 +52,19 @@ int fetch_block(
 );
 
 
+/**
+ * write_block() - fill a buffer with the contents of a block
+ * @block_number: block number on disk
+ * @block: pointer to the block
+ * @sb: pointer to superblock structure
+ *
+ * Write the content pointed by `block` on the disk.
+ *
+ * Return: 0 if succeeds, -1 otherwise.
+ */
+int write_block(
+	unsigned int number,
+	BYTE *block,
+	struct t2fs_superbloco *sb
+);
 #endif /* ifndef DISK_H */

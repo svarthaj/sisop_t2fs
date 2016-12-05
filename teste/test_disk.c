@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 #include "logging.h"
 #include "disk.h"
 
@@ -74,9 +75,56 @@ void test_fetch_superblock() {
 	assert(sb.diskSize == 32768);
 }
 
+void test_write_block() {
+	struct t2fs_superbloco sb;
+
+    if (fetch_superblock(&sb) != 0) {
+		logerror("test_write_block: superblock fetch");
+		exit(1);
+	}
+
+	BYTE *block_written = (BYTE *)malloc(sb.blockSize*SECTOR_SIZE*sizeof(BYTE));
+	BYTE *block_read = (BYTE *)malloc(sb.blockSize*SECTOR_SIZE*sizeof(BYTE));
+
+	if (!block_written) {
+		logerror("test_write_block: allocating block");
+	}
+	if (!block_read) {
+		logerror("test_write_block: allocating block");
+	}
+
+    // fill block to be written on disk
+    for (unsigned int i = 0; i < sb.blockSize; i++){
+        strncpy(block_written + i*SECTOR_SIZE, "foobar", SECTOR_SIZE);  
+    }
+    
+	unsigned int num_blocks = (sb.diskSize - sb.superblockSize - sb.freeBlocksBitmapSize - sb.freeInodeBitmapSize - sb.inodeAreaSize)/sb.blockSize;
+	unsigned int last = num_blocks - 1;
+	unsigned int past = last + 1;
+
+    write_block(0, block_written, &sb);
+    fetch_block(0, block_read, &sb);
+    assert(strcmp(block_written, block_read) == 0);
+
+    write_block(last, block_written, &sb);
+    fetch_block(last, block_read, &sb);
+    assert(strcmp(block_written, block_read) == 0);
+    
+    write_block(past, block_written, &sb);
+    fetch_block(past, block_read, &sb);
+	logwarning("ignore warning below");
+    assert(strcmp(block_written, block_read) == 0);
+
+	free(block_written);
+	free(block_read);
+
+}
+
 int main(int argc, char **argv) {
 	test_fetch_superblock();
 	test_fetch_inode();
 	test_fetch_block();
+    test_write_block();
+
     return 0;
 }
