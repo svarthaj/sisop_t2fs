@@ -499,3 +499,11 @@ int inode_add_block(
 //
 //	return -1;
 //}
+
+/* update inode in disk. returns 0 if successful and -1 otherwise. */
+int update_inode(
+	struct t2fs_inode *inode,
+	int index
+) {
+	return 0;
+}

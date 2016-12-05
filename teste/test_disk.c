@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include "inode.h"
 #include "logging.h"
 #include "utils.h"
 #include "disk.h"
@@ -53,6 +54,43 @@ void test_fetch_inode() {
 	assert(fetch_inode(-1, &inode, &sb));
 	logwarning("ignore warning below");
 	assert(fetch_inode(num_inodes, &inode, &sb) == -1);
+}
+
+void test_write_inode() {
+	struct t2fs_superbloco sb;
+	struct t2fs_inode inode;
+
+    if (fetch_superblock(&sb) != 0) {
+		logerror("test_write_inode: superblock fetch");
+		exit(1);
+	}
+
+	int index = new_inode();
+	if (index < 0 || fetch_inode(index, &inode, &sb) != 0) {
+		logerror("test_write_inode: inode fetch");
+		exit(1);
+	}
+
+	inode.dataPtr[0] = 10;
+	inode.dataPtr[1] = 11;
+	inode.singleIndPtr = 12;
+	inode.doubleIndPtr = 13;
+
+	if (write_inode(index, &inode, &sb) != 0) {
+		logerror("test_write_inode: write_inode");
+		exit(1);
+	}
+
+	if (fetch_inode(index, &inode, &sb) != 0) {
+		logerror("test_write_inode: inode fetch");
+		exit(1);
+	}
+
+	flogdebug("%d", inode.dataPtr[0]);
+	assert(inode.dataPtr[0] == 10);
+	assert(inode.dataPtr[1] == 11);
+	assert(inode.singleIndPtr == 12);
+	assert(inode.doubleIndPtr == 13);
 }
 
 void test_fetch_superblock() {
@@ -111,9 +149,9 @@ void test_write_block() {
     fetch_block(last, block_read, &sb);
     assert(memcmp(block_written, block_read, sb.blockSize*SECTOR_SIZE) == 0);
 
+	logwarning("ignore two warnings below");
     write_block(past, block_written, &sb);
     fetch_block(past, block_read, &sb);
-	logwarning("ignore warning below");
     assert(memcmp(block_written, block_read, sb.blockSize*SECTOR_SIZE) == 0);
 
 	free(block_written);
@@ -159,6 +197,7 @@ void test_new_data_block() {
 int main(int argc, char **argv) {
 	test_fetch_superblock();
 	test_fetch_inode();
+	test_write_inode();
 	test_fetch_block();
     test_write_block();
 	test_new_index_block();

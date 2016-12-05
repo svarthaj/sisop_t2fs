@@ -79,6 +79,69 @@ int fetch_inode(
 }
 
 /**
+ * write_inode()
+ * @inode_number: the number of the inode in the disk
+ * @inode: pointer to an inode structure
+ * @sb: pointer to a superblock structure
+ *
+ * Write the disk section corresponding to given inode number and fill
+ * it with the inode structure pointed by `inode`.
+ *
+ * Return: 0 if succeeds, -1 otherwise.
+ */
+int write_inode(
+	int inode_number,
+	struct t2fs_inode *inode,
+	struct t2fs_superbloco *sb
+) {
+	unsigned int inodes_per_sector = (SECTOR_SIZE/INODE_BYTE_SIZE);
+	if (inode_number < 0
+	    || inode_number >= sb->inodeAreaSize*inodes_per_sector
+		|| getBitmap2(BITMAP_INODE, inode_number) == 0) {
+		logwarning("write_inode: invalid inode number");
+		return -1;
+	}
+
+	BYTE *buffer = alloc_buffer(1);
+
+	unsigned int base = sb->superblockSize + sb->freeBlocksBitmapSize + sb->freeInodeBitmapSize;
+	unsigned int sector = base + inode_number/inodes_per_sector;
+
+    if (read_sector(sector, buffer) != 0) {
+        logerror("write_inode: reading sector");
+		free(buffer);
+		return -1;
+    }
+
+	unsigned int offset = inode_number%inodes_per_sector;
+
+	BYTE *ptr_bytes = (BYTE *)malloc(PTR_BYTE_SIZE*sizeof(BYTE));
+	int_to_bytes(inode->dataPtr[0], ptr_bytes);
+	memcpy(buffer + offset + 0*PTR_BYTE_SIZE, ptr_bytes, PTR_BYTE_SIZE);
+
+	int_to_bytes(inode->dataPtr[1], ptr_bytes);
+	memcpy(buffer + offset + 1*PTR_BYTE_SIZE, ptr_bytes, PTR_BYTE_SIZE);
+
+	int_to_bytes(inode->singleIndPtr, ptr_bytes);
+	memcpy(buffer + offset + 2*PTR_BYTE_SIZE, ptr_bytes, PTR_BYTE_SIZE);
+
+	int_to_bytes(inode->doubleIndPtr, ptr_bytes);
+	memcpy(buffer + offset + 3*PTR_BYTE_SIZE, ptr_bytes, PTR_BYTE_SIZE);
+
+    if (write_sector(sector, buffer) != 0) {
+        logerror("write_inode: writing sector");
+		free(ptr_bytes);
+		free(buffer);
+		return -1;
+    }
+
+	free(ptr_bytes);
+	free(buffer);
+
+	return 0;
+}
+
+/**
  * fetch_block() - fetch a block from disk
  * @number: block number
  * @buffer: pointer to buffer where the block will be copied

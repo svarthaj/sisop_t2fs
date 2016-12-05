@@ -36,6 +36,23 @@ int fetch_inode(
 );
 
 /**
+ * write_inode()
+ * @inode_number: the number of the inode in the disk
+ * @inode: pointer to an inode structure
+ * @sb: pointer to a superblock structure
+ *
+ * Write the disk section corresponding to given inode number and fill
+ * it with the inode structure pointed by `inode`.
+ *
+ * Return: 0 if succeeds, -1 otherwise.
+ */
+int write_inode(
+	int inode_number,
+	struct t2fs_inode *inode,
+	struct t2fs_superbloco *sb
+);
+
+/**
  * fetch_block() - fill a buffer with the contents of a block
  * @block_number: block number on disk
  * @block: pointer to the buffer
