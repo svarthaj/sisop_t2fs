@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "logging.h"
+#include "bitmap2.h"
 #include "apidisk.h"
 #include "t2fs.h"
 #include "disk.h"
@@ -236,4 +237,45 @@ int inode_find_record(
 	free(bytes);
 	record->TypeVal = 0x00; /* no dirent found */
 	return offset;
+}
+
+/**
+ * new_inode() - allocate a new inode in disk
+ *
+ * Find a free inode, mark it as not free and return its index.
+ *
+ * Return: the index of the inode or -1 if it fails.
+ */
+int new_inode() {
+	int i = searchBitmap2(BITMAP_INODE, 0);
+
+	if (i == 0) {
+		logwarning("new_inode: no more available inodes");
+		return -1;
+	}
+
+	if (i < 0) {
+		logerror("new_inode: finding inode");
+		return -1;
+	}
+
+	setBitmap2(BITMAP_INODE, i, 1);
+	return i;
+}
+
+/**
+ * free_inode() - frees inode
+ * @index: the index of the inode to be freed
+ *
+ * Mark the inode indexed by `index` as free
+ *
+ * Return: 0 if it suceeds, -1 otherwise.
+ */
+int free_inode(int index) {
+	if (index < 0) {
+		logwarning("free_inode: invalid index");
+		return -1;
+	}
+
+	return setBitmap2(BITMAP_INODE, index, 0);
 }

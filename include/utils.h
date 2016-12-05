@@ -113,4 +113,38 @@ int bytes_to_int(BYTE *buffer);
  */
 struct t2fs_record bytes_to_record(BYTE *buffer);
 
+/**
+ * find_record() - find the record of a file
+ * @names: list with the names forming the path to the file
+ * @record: pointer to a record to be filled by the function
+ * @ip: pointer to an index to be filled by the function, it represents
+ * the parent inode index
+ * @offset: pointer to an offset to be filled by the function
+ * @sb: pointer to the superblock structure
+ *
+ * Finds the record of the file with path represented by the list of names
+ * `names`. Pythonly, '/' + '/'.join(names) would be the string representing
+ * the path to the file.
+ *
+ * If the file exists and is found, `ip` will be the
+ * index of the parent directory's inode, `offset` will be the offset of the
+ * record inside the parent directory's inode, and `record` will be filled with
+ * the file's record.
+ *
+ * If the parent directory exists, but the file does not, `record` will have
+ * a TypeVal of 0x00, and `ip` will be the parent directory's inode number.
+ * `offset` could be anything in this case.
+ *
+ * If the parent directory does not exist (and consequently the file does not
+ * exist too), `record` will have a TypeVal of 0x00, and `ip` will be -1.
+ * `offset` could be anything in this case.
+ *
+ * Return: 0 if succeeds, -1 otherwise.
+ */
+//int find_record(
+//	struct
+//) {
+//
+//}
+
 #endif /* ifndef UTILS_H */
