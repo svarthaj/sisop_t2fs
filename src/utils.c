@@ -180,7 +180,7 @@ struct list* split_path(char *path){
         tok = strtok(path, "/");
         while(tok != NULL){
             append_list(path_list, tok);
-            tok = strtok(NULL, "/");       
+            tok = strtok(NULL, "/");
         }
         return path_list;
     }
