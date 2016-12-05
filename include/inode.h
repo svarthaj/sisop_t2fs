@@ -82,16 +82,40 @@ int inode_read(
 /**
  * inode_find_record() - find a record in an inode
  * @index: inode index in the disk
- * @name: string containing record name
+ * @name: null terminated string containing record name
+ * @record: pointer to a record to be filled with the entry
+ * @sb: pointer to superblock structure
+ * @offset: pointer to an unsigned int to be filled with the offset of the
+ * record, if found.
  *
- * Searches in the inode for a directory entry with a specific name.
+ * Searches in the inode for a directory entry with a specific name. The string
+ * `name` must be less than 31 characters long, not including the terminating
+ * null character.
  *
- * Return: the offset of the record inside the inode or -1 if there is none.
+ * Return: 0 if succeeds or -1 if there is no such record.
  */
 int inode_find_record(
 	int index,
 	char *name,
+	unsigned int *offset,
 	struct t2fs_record *record,
+	struct t2fs_superbloco *sb
+);
+
+/**
+ * inode_find_free_record() - find a free record in an inode
+ * @index: inode index in the disk
+ * @offset: pointer to an unsigned int to be filled with the offset of the
+ * record, if found.
+ * @sb: pointer to superblock structure
+ *
+ * Searches in the inode for a free directory entry and returns its offset.
+ *
+ * Return: 0 if succeeds, -1 otherwise.
+ */
+int inode_find_free_record(
+	int index,
+	unsigned int *offset,
 	struct t2fs_superbloco *sb
 );
 

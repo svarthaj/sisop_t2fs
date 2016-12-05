@@ -132,7 +132,7 @@ int inode_read(
 	struct t2fs_inode inode;
 
 	if (fetch_inode(index, &inode, sb) != 0) {
-		logwarning("read_inode: fetching inode");
+		logwarning("inode_read: couldn't fetch inode");
 		return -1;
 	}
 
@@ -143,9 +143,15 @@ int inode_read(
 	int block_number = inode_get_block_number(&inode, block_offset, sb);
 
 	BYTE *block = alloc_buffer(sb->blockSize);
-	if (block_number < 0 || fetch_block(block_number, block, sb) != 0) {
+	if (block_number < 0) {
+		logdebug("inode_read: end of inode");
+		free(block);
+		return bytes_read;
+	}
+
+	if (fetch_block(block_number, block, sb) != 0) {
 		loginfo("inode_read: couldn't fetch a block");
-		flogdebug("inode_read: inode %d, block offset %u, block number: %d", index, block_offset, block_number);
+		flogdebug("inode_read: inode %d, block offset %u", index, block_offset);
 		free(block);
 		return bytes_read;
 	}
@@ -162,7 +168,14 @@ int inode_read(
 	while (size_left > 0) {
 		block_offset += 1;
 		block_number = inode_get_block_number(&inode, block_offset, sb);
-		if (block_number < 0 || fetch_block(block_number, block, sb) != 0) {
+
+		if (block_number < 0) {
+			logdebug("inode_read: end of inode");
+			free(block);
+			return bytes_read;
+		}
+
+		if (fetch_block(block_number, block, sb) != 0) {
 			loginfo("inode_read: couldn't fetch a block");
 			flogdebug("inode_read: inode %d, block offset %u", index, block_offset);
 			free(block);
@@ -189,19 +202,73 @@ int inode_read(
  * @name: null terminated string containing record name
  * @record: pointer to a record to be filled with the entry
  * @sb: pointer to superblock structure
+ * @offset: pointer to an unsigned int to be filled with the offset of the
+ * record, if found.
  *
  * Searches in the inode for a directory entry with a specific name. The string
  * `name` must be less than 31 characters long, not including the terminating
  * null character.
  *
- * Return: the offset of the record inside the inode or -1 if there is none.
+ * Return: 0 if succeeds or -1 if there is no such record.
  */
 int inode_find_record(
 	int index,
 	char *name,
+	unsigned int *offset,
 	struct t2fs_record *record,
 	struct t2fs_superbloco *sb
 ){
+	BYTE *bytes = (BYTE *)malloc(RECORD_BYTE_SIZE*sizeof(BYTE));
+
+	if (!bytes) {
+		logerror("inode_find_record: allocating memory");
+		return -1;
+	}
+
+	unsigned int name_len = strlen(name);
+
+	*offset = 0;
+	int bytes_read = inode_read(index, *offset, RECORD_BYTE_SIZE, bytes, sb);
+	if (bytes_read == -1) return -1;
+
+	while (bytes_read == RECORD_BYTE_SIZE) {
+		*record = bytes_to_record(bytes);
+		char is_file = (record->TypeVal == 0x01);
+		char is_dir = (record->TypeVal == 0x02);
+		char match = (strncmp(record->name, name, name_len) == 0);
+
+		if ((is_file || is_dir) && match) {
+			free(bytes);
+			return 0;
+		} else {
+			*offset += RECORD_BYTE_SIZE;
+		}
+
+		bytes_read = inode_read(index, *offset, RECORD_BYTE_SIZE, bytes, sb);
+		if (bytes_read == -1) return -1;
+	}
+
+	free(bytes);
+	record->TypeVal = 0x00; /* no dirent found */
+	return -1;
+}
+
+/**
+ * inode_find_free_record() - find a free record in an inode
+ * @index: inode index in the disk
+ * @offset: pointer to an unsigned int to be filled with the offset of the
+ * record, if found.
+ * @sb: pointer to superblock structure
+ *
+ * Searches in the inode for a free directory entry and returns its offset.
+ *
+ * Return: 0 if succeeds, -1 otherwise.
+ */
+int inode_find_free_record(
+	int index,
+	unsigned int *offset,
+	struct t2fs_superbloco *sb
+) {
 	if (index < 0) {
 		logwarning("inode_find_record: invalid inode index");
 		return -1;
@@ -214,29 +281,25 @@ int inode_find_record(
 		return -1;
 	}
 
-	unsigned int name_len = strlen(name);
-
-	unsigned int offset = 0;
-	int bytes_read = inode_read(index, offset, RECORD_BYTE_SIZE, bytes, sb);
+	*offset = 0;
+	int bytes_read = inode_read(index, *offset, RECORD_BYTE_SIZE, bytes, sb);
 	while (bytes_read == RECORD_BYTE_SIZE) {
-		*record = bytes_to_record(bytes);
-		char is_file = (record->TypeVal == 0x01);
-		char is_dir = (record->TypeVal == 0x02);
-		char match = (strncmp(record->name, name, name_len) == 0);
+		struct t2fs_record record = bytes_to_record(bytes);
+		char is_file = (record.TypeVal == 0x01);
+		char is_dir = (record.TypeVal == 0x02);
 
-		if ((is_file || is_dir) && match) {
+		if (!(is_file || is_dir)) {
 			free(bytes);
-			return offset;
+			return 0;
 		} else {
-			offset += RECORD_BYTE_SIZE;
+			*offset += RECORD_BYTE_SIZE;
 		}
 
-		bytes_read = inode_read(index, offset, RECORD_BYTE_SIZE, bytes, sb);
+		bytes_read = inode_read(index, *offset, RECORD_BYTE_SIZE, bytes, sb);
 	}
 
 	free(bytes);
-	record->TypeVal = 0x00; /* no dirent found */
-	return offset;
+	return -1;
 }
 
 /**
