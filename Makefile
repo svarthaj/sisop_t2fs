@@ -6,23 +6,19 @@ TESTS := $(patsubst %,teste/test_%.out,$(TESTS))
 
 CC := gcc -Wall -std=c99 -I ./include
 
-.PHONY: all
+.PHONY: all test restore_disk clean
 all:
 
-.PHONY: test
 test: $(TESTS)
 
-teste/test_%.out: restore_disk $(OBJECTS) teste/test_%.c
+teste/test_%.out: $(OBJECTS) teste/test_%.c
+	cp t2fs_disk.dat.bak t2fs_disk.dat
 	$(CC) $^ -o $@
 	./$@ && rm $@
 
-.PHONY: restore_disk
-restore_disk:
-	cp t2fs_disk.dat.bak t2fs_disk.dat
 
 bin/%.o: src/%.c
 	$(CC) -c $^ -o $@
 
-.PHONY: clean
 clean:
 	rm -rf lib/*.a bin/*.o src/*~ include/*~ teste/*.out *~
