@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdlib.h>
+#include "bitmap2.h"
 #include "logging.h"
 #include "disk.h"
 #include "utils.h"
@@ -92,12 +93,21 @@ void test_inode_find_record() {
 	free(buffer);
 }
 
+void test_new_free_inode() {
+	assert(getBitmap2(BITMAP_INODE, 0) == 1);
+	int i = new_inode();
+	assert(getBitmap2(BITMAP_INODE, i) == 1);
+	free_inode(i);
+	assert(getBitmap2(BITMAP_INODE, i) == 0);
+}
+
 int main(int argc, const char *argv[])
 {
 	test_inode_follow_once();
 	test_inode_follow_twice();
 	test_inode_get_block_number();
 	test_inode_find_record();
+	test_new_free_inode();
 
 	return 0;
 }

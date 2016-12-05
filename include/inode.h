@@ -95,4 +95,23 @@ int inode_find_record(
 	struct t2fs_superbloco *sb
 );
 
+/**
+ * new_inode() - allocate a new inode in disk
+ *
+ * Find a free inode, mark it as not free and return its index.
+ *
+ * Return: the index of the inode or -1 if it fails.
+ */
+int new_inode();
+
+/**
+ * free_inode() - frees inode
+ * @index: the index of the inode to be freed
+ *
+ * Mark the inode indexed by `index` as free
+ *
+ * Return: 0 if it suceeds, -1 otherwise.
+ */
+int free_inode(int index);
+
 #endif /* ifndef INODE_H */
