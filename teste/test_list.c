@@ -7,23 +7,30 @@
 #include "list.h"
 
 void test_create_list(){
-    struct list *generic_list;
-    generic_list = (struct list*)malloc(sizeof(struct list));
-
-    create_list(generic_list);
+    struct list *generic_list = create_list();
 
     assert(generic_list->it == NULL);
     assert(generic_list->first == NULL);
     assert(generic_list->last == NULL);
 }
 
+void test_destroy_list(){
+    char *data1 = "foo";
+    char *data2 = "bar";
+    struct list *generic_list = create_list();
+    
+    append_list(generic_list, data1);
+    append_list(generic_list, data2);
+    append_list(generic_list, data1);
+    
+    destroy_list(generic_list);
+}
+
 void test_append_list(){
     char *data1 = "foo";
     char *data2 = "bar";
-    struct list *generic_list;
-    generic_list = (struct list*)malloc(sizeof(struct list));
-
-    create_list(generic_list);
+    struct list *generic_list = create_list();
+    
     append_list(generic_list, data1);
     assert(generic_list->first->node == data1);
     assert(generic_list->last->node == data1);
@@ -40,10 +47,8 @@ void test_append_list(){
 void test_first_list(){
     char *data1 = "foo";
     char *data2 = "bar";
-    struct list *generic_list;
-    generic_list = (struct list*)malloc(sizeof(struct list));
+    struct list *generic_list = create_list();
 
-    create_list(generic_list);
     append_list(generic_list, data1);
     append_list(generic_list, data2);
     append_list(generic_list, data1);
@@ -54,10 +59,8 @@ void test_first_list(){
 void test_last_list(){
     char *data1 = "foo";
     char *data2 = "bar";
-    struct list *generic_list;
-    generic_list = (struct list*)malloc(sizeof(struct list));
+    struct list *generic_list = create_list();
 
-    create_list(generic_list);
     append_list(generic_list, data2);
     append_list(generic_list, data2);
     append_list(generic_list, data1);
@@ -70,10 +73,8 @@ void test_last_list(){
 void test_next_list(){
     char *data1 = "foo";
     char *data2 = "bar";
-    struct list *generic_list;
-    generic_list = (struct list*)malloc(sizeof(struct list));
+    struct list *generic_list = create_list();
 
-    create_list(generic_list);
     append_list(generic_list, data1);
     append_list(generic_list, data2);
     append_list(generic_list, data1);
@@ -87,10 +88,8 @@ void test_getnode_list(){
     char *data1 = "foo";
     char *data2 = "bar";
     char *data3;
-    struct list *generic_list;
-    generic_list = (struct list*)malloc(sizeof(struct list));
+    struct list *generic_list = create_list();
 
-    create_list(generic_list);
     append_list(generic_list, data1);
     append_list(generic_list, data2);
     append_list(generic_list, data1);
@@ -105,10 +104,8 @@ void test_remove_list(){
     char *data1 = "foo";
     char *data2 = "bar";
     char *data3 = "foobar";
-    struct list *generic_list;
-    generic_list = (struct list*)malloc(sizeof(struct list));
+    struct list *generic_list = create_list();
 
-    create_list(generic_list);
     append_list(generic_list, data1);
     append_list(generic_list, data2);
     append_list(generic_list, data3);
@@ -117,14 +114,14 @@ void test_remove_list(){
     first_list(generic_list);
     next_list(generic_list);
     remove_list(generic_list);
-    assert(strcmp(generic_list->it->node, data3) == 0);
+    assert(strcmp(generic_list->it->node, data1) == 0);
 
     last_list(generic_list);
     remove_list(generic_list);
-    assert(strcmp(generic_list->it->node, data3) == 0);
+    assert(strcmp(generic_list->it->node, data1) == 0);
  
     remove_list(generic_list);
-    assert(strcmp(generic_list->it->node, data1) == 0);
+    assert(strcmp(generic_list->it->node, data3) == 0);
 
     remove_list(generic_list);
     assert(generic_list->it == NULL);
@@ -142,5 +139,7 @@ int main(int argc, const char *argv[]) {
     test_next_list();
     test_getnode_list();
     test_remove_list();
+    //test_destroy_list();
+
     return 0;
 }

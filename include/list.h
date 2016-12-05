@@ -15,7 +15,8 @@ struct list {
     struct node_list *last;
 };
 
-int create_list (struct list *l);
+struct list *create_list ();
+int destroy_list(struct list *l);
 int first_list (struct list *l);
 int last_list (struct list *l);
 int next_list (struct list *l);

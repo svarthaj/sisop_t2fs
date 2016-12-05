@@ -6,10 +6,16 @@
 #include "disk.h"
 #include "list.h"
 
-int create_list (struct list *l){
-    l->it = NULL;
-    l->first = NULL;
-    l->last = NULL;
+struct list *create_list (){
+    struct list *new_list;
+    if (new_list = (struct list*)malloc(sizeof(struct list))){
+        new_list->it = NULL;
+        new_list->first = NULL;
+        new_list->last = NULL;
+        return new_list;
+    }
+    
+    else return NULL;
 }
 
 int first_list (struct list *l){
@@ -22,15 +28,25 @@ int first_list (struct list *l){
 }
 
 int last_list (struct list *l){
-    l->it = l->last;
+    if(l->last != NULL){
+        l->it = l->last;
+        return 0;
+    }
+    return -1;
 }
 
 int next_list (struct list *l){
-    l->it = l->it->next;
+    if(l->it->next != NULL){
+        l->it = l->it->next;
+        return 0;
+    }
+    else return -1;
 }
 
 void *getnode_list(struct list *l){
-    return l->it->node;
+    if(l->it->node != NULL)
+        return l->it->node;
+    else return NULL;
 }
 
 int append_list (struct list *l, void *data){
@@ -68,12 +84,12 @@ int remove_list (struct list *l){
                 aux->next->prev = NULL;  
             }    
             else if(aux->next == NULL){//removing last node
-                l->it = aux->prev;
+                l->it = l->first;
                 l->last = aux->prev;
                 aux->prev->next = NULL;
             }
             else{ 
-                l->it = aux->next;
+                l->it = l->first;
                 aux->prev->next = aux->next;
                 aux->next->prev = aux->prev;
             }
@@ -82,6 +98,23 @@ int remove_list (struct list *l){
         }
     }
     else return 0;
+}
+
+int destroy_list(struct list *l) {
+    if(l!=NULL){
+        first_list(l);
+        while(next_list(l) != -1){
+            free(l->it->prev->prev);
+            free(l->it->prev->next);
+        }
+        free(l->last->prev);
+        free(l->last->next);
+        free(l->first);
+        free(l->last);
+        free(l->it);
+        return 0;
+    }
+    else return -1;
 }
 
 
