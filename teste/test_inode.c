@@ -46,7 +46,7 @@ void test_inode_get_block_number() {
 	assert(inode_get_block_number(&inode, 0, &sb) == 100);
 	assert(inode_get_block_number(&inode, second, &sb) == -2);
 	//assert(inode_get_block_number(&inode, last, &sb) == -2);
-	logwarning("ignore warning bellow");
+	logwarning("ignore warning below");
 	assert(inode_get_block_number(&inode, past, &sb) == -3);
 }
 
@@ -66,11 +66,11 @@ void test_inode_read() {
 	int first = 0;
 	int past = sb.inodeAreaSize*(SECTOR_SIZE/INODE_BYTE_SIZE);
 	assert(inode_read(first, 0, 10, buffer, &sb) == 10);
-	logwarning("ignore warning bellow");
+	logwarning("ignore warning below");
 	assert(inode_read(-1, 0, 10, buffer, &sb) == -1);
-	logwarning("ignore warning bellow");
+	logwarning("ignore warning below");
 	assert(inode_read(past, 0, 10, buffer, &sb) == -1);
-	logwarning("ignore warning bellow");
+	logwarning("ignore warning below");
 	assert(inode_read(first, max_file_size, 10, buffer, &sb) == -1);
 
 	free(buffer);
@@ -78,19 +78,30 @@ void test_inode_read() {
 
 void test_inode_find_record() {
 	struct t2fs_superbloco sb = get_suberblock();
-	BYTE *buffer = alloc_buffer(sb.blockSize);
-
+	unsigned int offset;
 	struct t2fs_record record;
-	assert(inode_find_record(0, "poqwpoqwpoqwpoqwqwpopoqw", &record, &sb) >= 0);
-	assert(record.TypeVal == 0x00);
-	logwarning("ignore warning bellow");
-	assert(inode_find_record(-1, "arq", &record, &sb) == -1);
-	assert(inode_find_record(0, "arq", &record, &sb) == 0);
-	assert(record.TypeVal == 0x01);
-	assert(inode_find_record(0, "sub", &record, &sb) == RECORD_BYTE_SIZE);
-	assert(record.TypeVal == 0x02);
 
-	free(buffer);
+	logdebug("should reach end of inode");
+	assert(inode_find_record(0, "poqpoqwpoqwqwpopoqw", &offset, &record, &sb) == -1);
+	assert(record.TypeVal == 0x00);
+	logwarning("ignore warning below");
+	assert(inode_find_record(-1, "arq", &offset, &record, &sb) == -1);
+	assert(inode_find_record(0, "arq", &offset, &record, &sb) == 0);
+	assert(record.TypeVal == 0x01);
+	assert(offset == 0);
+	assert(inode_find_record(0, "sub", &offset, &record, &sb) == 0);
+	assert(record.TypeVal == 0x02);
+	assert(offset == RECORD_BYTE_SIZE);
+}
+
+void test_inode_find_free_record() {
+	struct t2fs_superbloco sb = get_suberblock();
+	unsigned int offset;
+
+	assert(inode_find_free_record(0, &offset, &sb) == 0);
+	assert(offset == 2*RECORD_BYTE_SIZE);
+	logwarning("ignore two warnings below");
+	assert(inode_find_free_record(1239, &offset, &sb) == -1);
 }
 
 void test_new_free_inode() {
@@ -107,6 +118,7 @@ int main(int argc, const char *argv[])
 	test_inode_follow_twice();
 	test_inode_get_block_number();
 	test_inode_find_record();
+	test_inode_find_free_record();
 	test_new_free_inode();
 
 	return 0;

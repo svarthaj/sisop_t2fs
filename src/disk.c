@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include "bitmap2.h"
 #include "logging.h"
 #include "apidisk.h"
 #include "t2fs.h"
@@ -47,7 +48,9 @@ int fetch_inode(
 	struct t2fs_superbloco *sb
 ) {
 	unsigned int inodes_per_sector = (SECTOR_SIZE/INODE_BYTE_SIZE);
-	if (inode_number < 0 || inode_number >= sb->inodeAreaSize*inodes_per_sector) {
+	if (inode_number < 0
+	    || inode_number >= sb->inodeAreaSize*inodes_per_sector
+		|| getBitmap2(BITMAP_INODE, inode_number) == 0) {
 		logwarning("fetch_inode: invalid inode number");
 		return -1;
 	}
