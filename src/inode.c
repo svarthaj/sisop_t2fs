@@ -342,3 +342,160 @@ int free_inode(int index) {
 
 	return setBitmap2(BITMAP_INODE, index, 0);
 }
+
+/**
+ * inode_write() - write inode data
+ * @index: inode index in the disk
+ * @offset: byte offset inside inode
+ * @size: size of write
+ * @buffer: pointer to the buffer that stores the data to be written
+ *
+ * Write inode data in inode indexed by `index` from byte offset `offset` to
+ * `offset + size`.
+ *
+ * Return: number of bytes that could be writen, -1 in case of failure.
+ */
+int inode_write(
+	int index,
+	unsigned int offset,
+	unsigned int size,
+	BYTE *buffer,
+	struct t2fs_superbloco *sb
+) {
+	struct t2fs_inode inode;
+
+	if (fetch_inode(index, &inode, sb) != 0) {
+		logwarning("inode_read: couldn't fetch inode");
+		return -1;
+	}
+
+	unsigned int block_byte_size = (sb->blockSize*SECTOR_SIZE);
+	unsigned int block_offset = offset/block_byte_size;
+	unsigned int bytes_written = 0;
+	unsigned int size_left = size;
+	int block_number = inode_get_block_number(&inode, block_offset, sb);
+
+	BYTE *block = alloc_buffer(sb->blockSize);
+	if (block_number == -2) {
+		logdebug("inode_write: allocating more space");
+		inode_add_block(&inode, index, block_offset, sb);
+	}
+
+	if (fetch_block(block_number, block, sb) != 0) {
+		loginfo("inode_write: couldn't fetch a block");
+		flogdebug("inode_write: inode %d, block offset %u", index, block_offset);
+		free(block);
+		return bytes_written;
+	}
+
+	unsigned int base = 0;
+	unsigned int inf = offset%block_byte_size;
+	unsigned int len = umin(size_left, sb->blockSize*SECTOR_SIZE);
+	memcpy(block + inf, buffer + base, len);
+
+	if (write_block(block_number, block, sb) != 0) {
+		loginfo("inode_write: couldn't write a block");
+		flogdebug("inode_write: inode %d, block offset %u", index, block_offset);
+		free(block);
+		return bytes_written;
+	}
+
+	bytes_written += len;
+	base += bytes_written;
+	size_left -= bytes_written;
+
+	while (size_left > 0) {
+		block_offset += 1;
+		block_number = inode_get_block_number(&inode, block_offset, sb);
+
+		if (block_number < 0) {
+			logdebug("inode_write: allocating more space");
+			inode_add_block(&inode, index, block_offset, sb);
+		}
+
+		if (fetch_block(block_number, block, sb) != 0) {
+			loginfo("inode_write: couldn't fetch a block");
+			flogdebug("inode_write: inode %d, block offset %u", index, block_offset);
+			free(block);
+			return bytes_written;
+		}
+
+		inf = 0;
+		len = umin(size_left, sb->blockSize*SECTOR_SIZE);
+		memcpy(block + inf, buffer + base, len);
+
+		if (write_block(block_number, block, sb) != 0) {
+			loginfo("inode_write: couldn't write a block");
+			flogdebug("inode_write: inode %d, block offset %u", index, block_offset);
+			free(block);
+			return bytes_written;
+		}
+
+
+		bytes_written += len;
+		base += bytes_written;
+		size_left -= bytes_written;
+	}
+
+	free(block);
+
+	return bytes_written;
+}
+
+///**
+// * inode_add_block() - add block to inode
+// * @inode: inode struct
+// * @index: inode index
+// * @offset: block offset inside inode
+// * @sb: pointer to superblock structure
+// *
+// * Add block to inode at block offset `offset`.
+// *
+// * Return: 0 if succeeds, -1 if there are no more blocks in the disk, -2 if
+// * there is an invalid pointer o the way, -3 if offset is off limits.
+// */
+int inode_add_block(
+	struct t2fs_inode *inode,
+	int index,
+	unsigned int offset,
+	struct t2fs_superbloco *sb
+) { return -1; }
+//	unsigned int dir = NUM_INODE_DIRECT_PTRS;
+//	unsigned int sind = NUM_INODE_SINGLE_IND_PTRS;
+//	unsigned int dind = NUM_INODE_DOUBLE_IND_PTRS;
+//	unsigned int ppb = sb->blockSize*SECTOR_SIZE/PTR_BYTE_SIZE;
+//
+//	if (offset < dir) {
+//		return inode_add_block_direct(inode, index, offset, sb);
+//	} else if (offset < dir + sind*ppb) {
+//		return inode_add_block_direct(inode, index, offset - dir, sb);
+//	} else if (offset < dir + sind*ppb + dind*ppb*ppb) {
+//		return inode_add_block_direct(inode, index, offset - dir - sind*ppb, sb);
+//	} else {
+//		logwarning("inode_add_block: invalid offset");
+//		return -3;
+//	}
+//}
+//
+///**
+// * inide_add_block_direct() - add a block to direct pointers
+// * @inode: inode struct
+// * @offset: block offset inside inode
+// * @sb: pointer to superblock structure
+// *
+// * Return: 0 if succeeds, -1 if there are no more blocks in the disk, -2 if
+// * there is an invalid pointer o the way, -3 if offset is off limits.
+// */
+//int inode_add_block_direct(
+//	struct t2fs_inode *inode,
+//	int index;
+//	unsigned int offset,
+//	struct t2fs_superbloco *sb
+//) {
+//	//unsigned int data_block_number = new_index_block();
+//	inode->direct[offset] = data_block_number;
+//
+//	//update_inode(index, inode);
+//
+//	return -1;
+//}

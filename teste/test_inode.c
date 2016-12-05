@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 #include "bitmap2.h"
 #include "logging.h"
 #include "disk.h"
@@ -61,7 +62,7 @@ void test_inode_read() {
 
 
 	unsigned int ppb = sb.blockSize*SECTOR_SIZE/PTR_BYTE_SIZE;
-	unsigned int max_file_size = SECTOR_SIZE*sb.blockSize*(2 + ppb + ppb*ppb);
+	unsigned int max_file_size = sb.blockSize*(2 + ppb + ppb*ppb);
 
 	int first = 0;
 	int past = sb.inodeAreaSize*(SECTOR_SIZE/INODE_BYTE_SIZE);
@@ -70,8 +71,8 @@ void test_inode_read() {
 	assert(inode_read(-1, 0, 10, buffer, &sb) == -1);
 	logwarning("ignore warning below");
 	assert(inode_read(past, 0, 10, buffer, &sb) == -1);
-	logwarning("ignore warning below");
-	assert(inode_read(first, max_file_size, 10, buffer, &sb) == -1);
+	logwarning("ignore warning and debug below");
+	assert(inode_read(first, max_file_size, 10, buffer, &sb) == 0);
 
 	free(buffer);
 }
@@ -112,6 +113,99 @@ void test_new_free_inode() {
 	assert(getBitmap2(BITMAP_INODE, i) == 0);
 }
 
+void test_inode_write() {
+	int index;
+	unsigned int offset;
+	unsigned int size;
+	BYTE *buffer;
+	struct t2fs_superbloco sb = get_suberblock();
+
+	unsigned int buffer_size = sb.blockSize*SECTOR_SIZE*sizeof(BYTE);
+	BYTE *block_written = (BYTE *)malloc(buffer_size);
+	BYTE *block_read = (BYTE *)malloc(buffer_size);
+
+	if (!block_written) {
+		logerror("test_write_block: allocating block");
+	}
+	if (!block_read) {
+		logerror("test_write_block: allocating block");
+	}
+
+    // fill block to be written on disk
+    for (unsigned int i = 0; i < sb.blockSize; i++){
+        memcpy(block_written + i*SECTOR_SIZE, "foobar", SECTOR_SIZE);
+    }
+
+	index = 0;
+	offset = 0;
+	size = 100;
+	buffer = block_written;
+	assert(inode_write(
+		index,
+		offset,
+		size,
+		buffer,
+		&sb
+	) == size);
+
+	buffer = block_read;
+	assert(inode_read(
+		index,
+		offset,
+		size,
+		buffer,
+		&sb
+	) == size);
+
+    assert(memcmp(block_written, block_read, size) == 0);
+
+	index = 0;
+	offset = sb.blockSize*SECTOR_SIZE;
+	size = 100;
+	buffer = block_written;
+	assert(inode_write(
+		index,
+		offset,
+		size,
+		buffer,
+		&sb
+	) == size);
+
+	buffer = block_read;
+	assert(inode_read(
+		index,
+		offset,
+		size,
+		buffer,
+		&sb
+	) == size);
+
+    assert(memcmp(block_written, block_read, size) == 0);
+
+	index = 0;
+	offset = sb.blockSize*SECTOR_SIZE;
+	size = sb.blockSize*SECTOR_SIZE*2;
+	buffer = block_written;
+	assert(inode_write(
+		index,
+		offset,
+		size,
+		buffer,
+		&sb
+	) == size);
+
+	buffer = block_read;
+	assert(inode_read(
+		index,
+		offset,
+		size,
+		buffer,
+		&sb
+	) == size);
+
+    assert(memcmp(block_written, block_read, size) == 0);
+}
+
 int main(int argc, const char *argv[])
 {
 	test_inode_follow_once();
@@ -120,6 +214,8 @@ int main(int argc, const char *argv[])
 	test_inode_find_record();
 	test_inode_find_free_record();
 	test_new_free_inode();
+	test_inode_read();
+	test_inode_write();
 
 	return 0;
 }

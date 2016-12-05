@@ -119,7 +119,7 @@ int write_block(
 ) {
 	unsigned int base = sb->superblockSize + sb->freeBlocksBitmapSize + sb->freeInodeBitmapSize + sb->inodeAreaSize;
 	unsigned int offset = number*sb->blockSize;
-	
+
     if (base + offset + sb->blockSize > sb->diskSize) {
 		logwarning("write_block: tried to write past end of disk");
 		return -1;
@@ -133,4 +133,40 @@ int write_block(
 	}
 
 	return 0;
+}
+
+int new_data_block(struct t2fs_superbloco *sb) {
+	int s;
+	int found = 0;
+	while (!found) {
+		s = searchBitmap2(BITMAP_DADOS, 0);
+
+		if (s == 0) {
+			logerror("new_data_block: searchBitmap failed");
+			return -1;
+		}
+
+		while (s%16 != 0) {
+			int err = setBitmap2(BITMAP_DADOS, s, 1);
+			if (err < 0) {
+				logerror("new_data_block: setBitmap failed");
+			}
+			s++;
+		}
+
+		found = 1;
+		for (int i = 0; i < sb->blockSize; i++) {
+			if (getBitmap2(BITMAP_DADOS, s + i) != 0) {
+				found = 0;
+				break;
+			} else {
+				int err = setBitmap2(BITMAP_DADOS, s, 1);
+				if (err < 0) {
+					logerror("new_data_block: setBitmap failed");
+				}
+			}
+		}
+	}
+
+	return s/sb->blockSize;
 }

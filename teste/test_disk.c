@@ -95,29 +95,46 @@ void test_write_block() {
 
     // fill block to be written on disk
     for (unsigned int i = 0; i < sb.blockSize; i++){
-        strncpy(block_written + i*SECTOR_SIZE, "foobar", SECTOR_SIZE);  
+        memcpy(block_written + i*SECTOR_SIZE, "foobar", SECTOR_SIZE);
     }
-    
+
 	unsigned int num_blocks = (sb.diskSize - sb.superblockSize - sb.freeBlocksBitmapSize - sb.freeInodeBitmapSize - sb.inodeAreaSize)/sb.blockSize;
 	unsigned int last = num_blocks - 1;
 	unsigned int past = last + 1;
 
     write_block(0, block_written, &sb);
     fetch_block(0, block_read, &sb);
-    assert(strcmp(block_written, block_read) == 0);
+    assert(memcmp(block_written, block_read, sb.blockSize*SECTOR_SIZE) == 0);
 
     write_block(last, block_written, &sb);
     fetch_block(last, block_read, &sb);
-    assert(strcmp(block_written, block_read) == 0);
-    
+    assert(memcmp(block_written, block_read, sb.blockSize*SECTOR_SIZE) == 0);
+
     write_block(past, block_written, &sb);
     fetch_block(past, block_read, &sb);
 	logwarning("ignore warning below");
-    assert(strcmp(block_written, block_read) == 0);
+    assert(memcmp(block_written, block_read, sb.blockSize*SECTOR_SIZE) == 0);
 
 	free(block_written);
 	free(block_read);
 
+}
+
+void test_new_data_block() {
+	struct t2fs_superbloco sb;
+
+
+	logerror("ignore error below");
+    if (fetch_superblock(&sb) != 0) {
+		logerror("test_write_block: superblock fetch");
+		exit(1);
+	}
+
+	int allocs = 0;
+	while (new_data_block(&sb) > 0) {
+		allocs++;
+	}
+	flogdebug("number of blocks allocated: %d", allocs);
 }
 
 int main(int argc, char **argv) {
@@ -125,6 +142,7 @@ int main(int argc, char **argv) {
 	test_fetch_inode();
 	test_fetch_block();
     test_write_block();
+	test_new_data_block();
 
     return 0;
 }

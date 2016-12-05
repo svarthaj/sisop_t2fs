@@ -67,4 +67,7 @@ int write_block(
 	BYTE *block,
 	struct t2fs_superbloco *sb
 );
+
+int new_data_block(struct t2fs_superbloco *sb);
+
 #endif /* ifndef DISK_H */

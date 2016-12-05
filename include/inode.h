@@ -138,4 +138,31 @@ int new_inode();
  */
 int free_inode(int index);
 
+/**
+ * inode_write() - write inode data
+ * @index: inode index in the disk
+ * @offset: byte offset inside inode
+ * @size: size of write
+ * @buffer: pointer to the buffer that stores the data to be written
+ *
+ * Write inode data in inode indexed by `index` from byte offset `offset` to
+ * `offset + size`.
+ *
+ * Return: number of bytes that could be writen, -1 in case of failure.
+ */
+int inode_write(
+	int index,
+	unsigned int offset,
+	unsigned int size,
+	BYTE *buffer,
+	struct t2fs_superbloco *sb
+);
+
+int inode_add_block(
+	struct t2fs_inode *inode,
+	int index,
+	unsigned int offset,
+	struct t2fs_superbloco *sb
+);
+
 #endif /* ifndef INODE_H */
