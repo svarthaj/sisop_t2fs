@@ -135,6 +135,7 @@ int write_block(
 	return 0;
 }
 
+/* return the block number or -1 in case of error */
 int new_data_block(struct t2fs_superbloco *sb) {
 	int s;
 	int found = 0;
@@ -169,4 +170,33 @@ int new_data_block(struct t2fs_superbloco *sb) {
 	}
 
 	return s/sb->blockSize;
+}
+
+/* return the block number or -1 in case of error */
+int new_index_block(struct t2fs_superbloco *sb) {
+	int block_number = new_data_block(sb);
+
+	if (block_number == -1) {
+		return -1;
+	}
+
+	BYTE *block = alloc_buffer(sb->blockSize);
+	fetch_block(block_number, block, sb);
+
+	BYTE *invalid_ptr_bytes = (BYTE *)malloc(PTR_BYTE_SIZE*sizeof(BYTE));
+	if (!invalid_ptr_bytes) {
+		logerror("new_index_block: allocating invalid_ptr_bytes");
+		exit(1);
+	}
+
+	int_to_bytes(INVALID_PTR, invalid_ptr_bytes);
+
+	for (int i = 0; i < sb->blockSize*SECTOR_SIZE; i+= PTR_BYTE_SIZE) {
+		memcpy(block + i, invalid_ptr_bytes, PTR_BYTE_SIZE);
+	}
+
+	write_block(block_number, block, sb);
+	free(block);
+
+	return block_number;
 }

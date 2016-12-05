@@ -68,6 +68,10 @@ int write_block(
 	struct t2fs_superbloco *sb
 );
 
+/* return the block number or -1 in case of error */
 int new_data_block(struct t2fs_superbloco *sb);
+
+/* return the block number or -1 in case of error */
+int new_index_block(struct t2fs_superbloco *sb);
 
 #endif /* ifndef DISK_H */

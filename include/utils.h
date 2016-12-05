@@ -102,6 +102,7 @@ DWORD bytes_to_dword(BYTE *buffer);
  * Return: an integer
  */
 int bytes_to_int(BYTE *buffer);
+int int_to_bytes(int i, BYTE *buffer);
 
 /**
  * bytes_to_record() - return record represented by bytes array

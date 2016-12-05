@@ -48,6 +48,15 @@ void test_bytes_to_int() {
 	assert(bytes_to_int(baz) == 0x00000101);
 }
 
+void test_int_to_bytes() {
+	BYTE buffer[4];
+
+	for (int i = -200; i < 200; i+= 50) {
+		int_to_bytes(i, buffer);
+		assert(bytes_to_int(buffer) == i);
+	}
+}
+
 void test_bytes_to_dword() {
 	BYTE foo[] = {0, 0, 0, 0};
 	BYTE bar[] = {2, 0, 0, 0};
@@ -208,6 +217,7 @@ int main(int argc, const char *argv[])
 	test_bytes_to_word();
 	test_bytes_to_dword();
 	test_bytes_to_int();
+	test_int_to_bytes();
 	test_max_min();
     test_bytes_to_record();
 	test_sane_path();

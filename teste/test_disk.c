@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "logging.h"
+#include "utils.h"
 #include "disk.h"
 
 void test_fetch_block() {
@@ -120,16 +121,34 @@ void test_write_block() {
 
 }
 
-void test_new_data_block() {
+void test_new_index_block() {
 	struct t2fs_superbloco sb;
 
-
-	logerror("ignore error below");
     if (fetch_superblock(&sb) != 0) {
 		logerror("test_write_block: superblock fetch");
 		exit(1);
 	}
 
+	int index = new_index_block(&sb);
+	BYTE *buffer = alloc_buffer(sb.blockSize);
+	fetch_block(index, buffer, &sb);
+
+	for (int i = 0; i < sb.blockSize*SECTOR_SIZE; i += PTR_BYTE_SIZE) {
+		assert(bytes_to_int(buffer + i) == INVALID_PTR);
+	}
+
+	free(buffer);
+}
+
+void test_new_data_block() {
+	struct t2fs_superbloco sb;
+
+    if (fetch_superblock(&sb) != 0) {
+		logerror("test_write_block: superblock fetch");
+		exit(1);
+	}
+
+	logerror("ignore error below");
 	int allocs = 0;
 	while (new_data_block(&sb) > 0) {
 		allocs++;
@@ -142,6 +161,7 @@ int main(int argc, char **argv) {
 	test_fetch_inode();
 	test_fetch_block();
     test_write_block();
+	test_new_index_block();
 	test_new_data_block();
 
     return 0;

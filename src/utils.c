@@ -153,6 +153,20 @@ int bytes_to_int(BYTE *buffer) {
 	return (int)(tmp[0]<<24) + (int)(tmp[1]<<16) + (int)(tmp[2]<<8) + (int)tmp[3];
 }
 
+int int_to_bytes(int i, BYTE *buffer) {
+	BYTE tmp[4];
+
+	tmp[0] = (i>>24) & 0xFF;
+	tmp[1] = (i>>16) & 0xFF;
+	tmp[2] = (i>>8) & 0xFF;
+	tmp[3] = (i>>0) & 0xFF;
+
+	reverse_endianess(tmp, 4);
+	memcpy(buffer, tmp, 4);
+
+	return 0;
+}
+
 /**
  * bytes_to_record() - return record represented by bytes array
  * @buffer: pointer to the buffer containing the record data
