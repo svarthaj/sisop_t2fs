@@ -147,6 +147,29 @@ struct t2fs_record bytes_to_record(BYTE *buffer);
 //
 //}
 
-struct list *split_path(char *path);
+
+/**
+ * sane_path() - return if path is sane
+ * @path: pointer to string representing path
+ *
+ * Checks if all names in path are less than or equal to 31 characters in
+ * length, if it has a initial "/" and if it does not have a trailing "/"
+ *
+ * Return: 0 if path is sane, -1 if it's not.
+ */
+int sane_path(char *path);
+
+/**
+ * split_path() - short description
+ * @path: non-constant string representing the path
+ *
+ * Returns a list representing the path given by `path`. `path` *will* be
+ * modified by strtok()! Also `path`'s memory area must live as long as the
+ * list returned lives. In other words, only free(path) if destroy_list()
+ * is called on the list right after.
+ *
+ * Return: a list structure
+ */
+struct list* split_path(char *path);
 
 #endif /* ifndef UTILS_H */

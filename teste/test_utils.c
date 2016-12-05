@@ -80,28 +80,55 @@ void test_bytes_to_record() {
 	assert(record.inodeNumber == 0x00000100);
 }
 
+void test_sane_path() {
+	logwarning("ignore warning below");
+	assert(sane_path("") == -1);
+	logwarning("ignore warning below");
+	assert(sane_path("/") == -1);
+	logwarning("ignore warning below");
+	assert(sane_path("/foo//") == -1);
+	logwarning("ignore warning below");
+	assert(sane_path("//") == -1);
+	logwarning("ignore warning below");
+	assert(sane_path("/foo/") == -1);
+	logwarning("ignore warning below");
+	assert(sane_path("/fooooooooooooooooooooooooooooooo") == -1); // 32 chars
+	assert(sane_path("/foooooooooooooooooooooooooooooo") == 0); // 31 chars
+	assert(sane_path("/foo/bar") == 0);
+	assert(sane_path("/foo/bar/baz.txt") == 0);
+}
+
 void test_split_path(){
-    char *pathname = "/foo/bar/foobar/filename.txt";
+	/* pathname must be declared with [] and not * because it has to be
+	   modifiable */
+    char pathname[] = "/foo/bar/foobar/filename.txt";
+
     struct list *path_list = split_path(pathname);
 
-    assert(strcmp(path_list->it->node, "foo") == 0);
+	assert(path_list != NULL);
+
+    assert(strcmp(getnode_list(path_list), "foo") == 0);
+
     next_list(path_list);
-    assert(strcmp(path_list->it->node, "bar") == 0);
+    assert(strcmp(getnode_list(path_list), "bar") == 0);
+
     next_list(path_list);
-    assert(strcmp(path_list->it->node, "foobar") == 0);
+    assert(strcmp(getnode_list(path_list), "foobar") == 0);
+
     next_list(path_list);
-    assert(strcmp(path_list->it->node, "filename.txt") == 0);
+    assert(strcmp(getnode_list(path_list), "filename.txt") == 0);
 
-    char *broken_path = "/";
-    struct list *broken_list = split_path(broken_path);
+    next_list(path_list);
+	logwarning("ignore warning below");
+	assert(getnode_list(path_list) == NULL);
 
-    assert(broken_list->it->node == NULL);
-
-    char *empty_path = "";
-    struct list *empty_list = split_path(empty_path);
-    assert(empty_list->it->node == NULL);
-
+	// free(pathname);
 	destroy_list(path_list);
+
+    char broken_path[] = "/";
+	logwarning("ignore warning below");
+    struct list *broken_list = split_path(broken_path);
+    assert(broken_list == NULL);
 }
 
 int main(int argc, const char *argv[])
@@ -112,7 +139,8 @@ int main(int argc, const char *argv[])
 	test_bytes_to_int();
 	test_max_min();
     test_bytes_to_record();
-//    test_split_path();
+	test_sane_path();
+    test_split_path();
 
     return 0;
 }

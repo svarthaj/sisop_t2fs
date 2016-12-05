@@ -173,17 +173,76 @@ struct t2fs_record bytes_to_record(BYTE *buffer) {
 	return record;
 }
 
-struct list* split_path(char *path){
-    struct list *path_list = create_list();
-    char *tok;
-    if(strcmp(path, "/") != 0){
-        tok = strtok(path, "/");
-        while(tok != NULL){
-            append_list(path_list, tok);
-            tok = strtok(NULL, "/");
-        }
-        return path_list;
-    }
-    else return NULL;
+/**
+ * sane_path() - return if path is sane
+ * @path: pointer to string representing path
+ *
+ * Checks if all names in path are less than or equal to 31 characters in
+ * length, if it has a initial "/" and if it does not have a trailing "/"
+ *
+ * Return: 0 if path is sane, -1 if it's not.
+ */
+int sane_path(char *path)
+{
+	int len = strlen(path);
+
+	if (path[len - 1] == '/') {
+		logwarning("sane_path: path must not have trailing slash");
+		return -1;
+	}
+
+	if (path[0] != '/') {
+		logwarning("sane_path: path must begin with '/'");
+		return -1;
+	}
+
+	int name_sz = 0;
+	for (int i = 1; i < len; i++) {
+		if (path[i] == '/' && name_sz == 0) {
+			logwarning("sane_path: path must not contain empty names");
+			return -1;
+		}
+
+		if (path[i] == '/' && name_sz > 0) {
+			name_sz = 0;
+		} else {
+			name_sz += 1;
+		}
+
+		if (name_sz > 31) {
+			logwarning("sane_path: path musta have names under 31 characters");
+			return -1;
+		}
+	}
+
+	return 0;
 }
 
+/**
+ * split_path() - short description
+ * @path: non-constant string representing the path
+ *
+ * Returns a list representing the path given by `path`. `path` *will* be
+ * modified by strtok()! Also `path`'s memory area must live as long as the
+ * list returned lives. In other words, only free(path) if destroy_list()
+ * is called on the list right after.
+ *
+ * Return: a list structure
+ */
+struct list *split_path(char *path) {
+	if (sane_path(path) != 0) {
+		return NULL;
+	}
+
+    struct list *path_list = create_list();
+
+    char *tok;
+	tok = strtok(path, "/");
+	while(tok != NULL){
+		append_list(path_list, tok);
+		tok = strtok(NULL, "/");
+	}
+
+	first_list(path_list);
+	return path_list;
+}
