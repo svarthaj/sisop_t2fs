@@ -188,6 +188,13 @@ int inode_add_block_single_ind(
 	struct t2fs_superbloco *sb
 );
 
+int inode_add_block_double_ind(
+	int index,
+	struct t2fs_inode *inode,
+	unsigned int offset,
+	struct t2fs_superbloco *sb
+);
+
 /* update inode in disk. returns 0 if successful and -1 otherwise. */
 int update_inode(
 	int index,

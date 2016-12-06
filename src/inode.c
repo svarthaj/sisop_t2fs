@@ -65,6 +65,10 @@ int inode_follow_twice(
 
 	fetch_block(pointer, index_block, sb);
 
+	if (index_block == NULL) {
+		logdebug("null");
+	}
+
 	int next_pointer = bytes_to_int(index_block + (offset/ppb)*PTR_BYTE_SIZE);
 
 	free(index_block);
@@ -103,7 +107,7 @@ int inode_get_block_number(
 	} else if (offset < dir + sind*ppb) {
 		return inode_follow_once(offset - dir, inode->singleIndPtr, sb);
 	} else if (offset < dir + sind*ppb + dind*ppb*ppb) {
-		return inode_follow_twice(offset - dir - sind*ppb - dind*ppb*ppb, inode->doubleIndPtr, sb);
+		return inode_follow_twice(offset - dir - sind*ppb, inode->doubleIndPtr, sb);
 	} else {
 		logwarning("inode_get_block_number: tried to access beyond inode");
 		return -3;
@@ -474,7 +478,7 @@ int inode_add_block(
 	} else if (offset < dir + sind*ppb) {
 		return inode_add_block_single_ind(index, inode, offset - dir, sb);
 	} else if (offset < dir + sind*ppb + dind*ppb*ppb) {
-		return -1;//inode_add_block_direct(index, inode, offset - dir - sind*ppb, sb);
+		return inode_add_block_double_ind(index, inode, offset - dir - sind*ppb, sb);
 	} else {
 		logwarning("inode_add_block: invalid offset");
 		return -3;
@@ -517,7 +521,7 @@ int inode_add_block_single_ind(
 		inode->singleIndPtr = new_index_block(sb);
 	}
 
-	unsigned int data_block_number = new_index_block(sb);
+	int data_block_number = new_index_block(sb);
 
 	if (data_block_number < 0) {
 		return -1;
@@ -527,6 +531,55 @@ int inode_add_block_single_ind(
 		inode->singleIndPtr,
 		data_block_number,
 		offset,
+		sb
+	) != 0) {
+		return -1;
+	}
+
+
+	int err = update_inode(index, inode, sb);
+	return err;
+}
+
+int inode_add_block_double_ind(
+	int index,
+	struct t2fs_inode *inode,
+	unsigned int offset,
+	struct t2fs_superbloco *sb
+) {
+	if (inode->doubleIndPtr == INVALID_PTR) {
+		inode->doubleIndPtr = new_index_block(sb);
+	}
+
+	unsigned int ppb = sb->blockSize*SECTOR_SIZE/PTR_BYTE_SIZE;
+	int next = inode_follow_once(offset/ppb, inode->doubleIndPtr, sb);
+	if (next == -2) {
+		logerror("inode_add_block_double_ind: next pointer is -2");
+		return -1;
+	}
+
+	if (next == INVALID_PTR) {
+		next = new_index_block(sb);
+		if (next < 0 || add_pointer_to_index_block(
+			inode->doubleIndPtr,
+			next,
+			offset/ppb,
+			sb
+		) != 0) {
+			return -1;
+		}
+	}
+
+	int data_block_number = new_index_block(sb);
+
+	if (data_block_number < 0) {
+		return -1;
+	}
+
+	if (add_pointer_to_index_block(
+		next,
+		data_block_number,
+		offset%ppb,
 		sb
 	) != 0) {
 		return -1;

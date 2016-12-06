@@ -71,7 +71,8 @@ void test_inode_read() {
 	assert(inode_read(-1, 0, 10, buffer, &sb) == -1);
 	logwarning("ignore warning below");
 	assert(inode_read(past, 0, 10, buffer, &sb) == -1);
-	logwarning("ignore warning and debug below");
+	logwarning("ignore warning below");
+	logdebug("will try to read past the end of inode");
 	assert(inode_read(first, max_file_size, 10, buffer, &sb) == 0);
 
 	free(buffer);
@@ -161,6 +162,7 @@ void test_inode_write() {
     assert(memcmp(block_written, block_read, size) == 0);
 	new_data_block(&sb);
 
+	logdebug("should grow inode");
 	index = 0;
 	offset = sb.blockSize*SECTOR_SIZE;
 	size = 100;
@@ -189,7 +191,34 @@ void test_inode_write() {
 	size = sb.blockSize*SECTOR_SIZE*2;
 	buffer = block_written;
 	logwarning("ignore warning below");
-	logdebug("ignore debug below");
+	logdebug("should grow inode");
+	assert(inode_write(
+		index,
+		offset,
+		size,
+		buffer,
+		&sb
+	) == size);
+
+	buffer = block_read;
+	assert(inode_read(
+		index,
+		offset,
+		size,
+		buffer,
+		&sb
+	) == size);
+
+    assert(memcmp(block_written, block_read, size) == 0);
+
+	unsigned int ppb = sb.blockSize*SECTOR_SIZE/PTR_BYTE_SIZE;
+
+	index = 0;
+	offset = (2 + ppb)*sb.blockSize*SECTOR_SIZE;
+	size = sb.blockSize*SECTOR_SIZE*2;
+	buffer = block_written;
+	logwarning("ignore warning below");
+	logdebug("should grow inode twice");
 	assert(inode_write(
 		index,
 		offset,
