@@ -121,6 +121,18 @@ WORD bytes_to_word(BYTE *buffer) {
 	return ((WORD)tmp[0]<<8) + (WORD)tmp[1];
 }
 
+int word_to_bytes(WORD w, BYTE *buffer) {
+	BYTE tmp[2];
+    
+    for(int j = 0; j < 2; j++)
+	    tmp[j] = (w>>(8-j*8)) & 0xFF;
+
+	reverse_endianess(tmp, 2);
+	memcpy(buffer, tmp, 2);
+
+	return 0;
+}
+
 /**
  * bytes_to_dword() - return dword represented by bytes array
  * @buffer: pointer to the buffer containing the two bytes
@@ -135,6 +147,18 @@ DWORD bytes_to_dword(BYTE *buffer) {
 	reverse_endianess(tmp, 4);
 
 	return ((DWORD)tmp[0]<<24) + ((DWORD)tmp[1]<<16) + ((DWORD)tmp[2]<<8) + (DWORD)tmp[3];
+}
+
+int dword_to_bytes(DWORD dw, BYTE *buffer) {
+	BYTE tmp[4];
+    
+    for(int j = 0; j < 4; j++)
+	    tmp[j] = (dw>>(24-j*8)) & 0xFF;
+
+	reverse_endianess(tmp, 4);
+	memcpy(buffer, tmp, 4);
+
+	return 0;
 }
 
 /**
@@ -156,10 +180,8 @@ int bytes_to_int(BYTE *buffer) {
 int int_to_bytes(int i, BYTE *buffer) {
 	BYTE tmp[4];
 
-	tmp[0] = (i>>24) & 0xFF;
-	tmp[1] = (i>>16) & 0xFF;
-	tmp[2] = (i>>8) & 0xFF;
-	tmp[3] = (i>>0) & 0xFF;
+    for(int j = 0; j < 4; j++)
+	    tmp[j] = (i>>(24-j*8)) & 0xFF;
 
 	reverse_endianess(tmp, 4);
 	memcpy(buffer, tmp, 4);
@@ -186,6 +208,16 @@ struct t2fs_record bytes_to_record(BYTE *buffer) {
 	record.inodeNumber = bytes_to_int(buffer + 40);
 
 	return record;
+}
+
+int record_to_bytes(struct t2fs_record record, BYTE *buffer){
+    buffer[0] = record.TypeVal;
+    memcpy(buffer + 1, record.name, 31);
+    dword_to_bytes(record.blocksFileSize, buffer + 32);
+    dword_to_bytes(record.bytesFileSize, buffer + 36);
+    int_to_bytes(record.inodeNumber, buffer + 40);
+
+    return 0;
 }
 
 /**
