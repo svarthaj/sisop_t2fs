@@ -120,7 +120,7 @@ void test_inode_write() {
 	BYTE *buffer;
 	struct t2fs_superbloco sb = get_suberblock();
 
-	unsigned int buffer_size = sb.blockSize*SECTOR_SIZE*sizeof(BYTE);
+	unsigned int buffer_size = 2*sb.blockSize*SECTOR_SIZE*sizeof(BYTE);
 	BYTE *block_written = (BYTE *)malloc(buffer_size);
 	BYTE *block_read = (BYTE *)malloc(buffer_size);
 
@@ -132,8 +132,9 @@ void test_inode_write() {
 	}
 
     // fill block to be written on disk
-    for (unsigned int i = 0; i < sb.blockSize; i++){
-        memcpy(block_written + i*SECTOR_SIZE, "foobar", SECTOR_SIZE);
+	int n = strlen("foobar");
+    for (unsigned int i = 0; i < buffer_size; i += n){
+        memcpy(block_written + i*n, "foobar", n);
     }
 
 	index = 0;
@@ -158,6 +159,7 @@ void test_inode_write() {
 	) == size);
 
     assert(memcmp(block_written, block_read, size) == 0);
+	new_data_block(&sb);
 
 	index = 0;
 	offset = sb.blockSize*SECTOR_SIZE;
@@ -186,6 +188,8 @@ void test_inode_write() {
 	offset = sb.blockSize*SECTOR_SIZE;
 	size = sb.blockSize*SECTOR_SIZE*2;
 	buffer = block_written;
+	logwarning("ignore warning below");
+	logdebug("ignore debug below");
 	assert(inode_write(
 		index,
 		offset,
@@ -221,6 +225,8 @@ void test_add_pointer_to_index_block() {
 
 	assert(bytes_to_int(block) == dblock);
 	assert(bytes_to_int(block + PTR_BYTE_SIZE) == INVALID_PTR);
+
+	free(block);
 }
 
 int main(int argc, const char *argv[])
@@ -232,7 +238,7 @@ int main(int argc, const char *argv[])
 	test_inode_find_free_record();
 	test_new_free_inode();
 	test_inode_read();
-//	test_inode_write();
+	test_inode_write();
 	test_add_pointer_to_index_block();
 
 	return 0;

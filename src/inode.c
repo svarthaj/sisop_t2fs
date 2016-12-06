@@ -32,7 +32,7 @@ int inode_follow_once(
 	BYTE *index_block = alloc_buffer(sb->blockSize);
 
 	fetch_block(pointer, index_block, sb);
-	int next_block = bytes_to_int(index_block + offset%PTR_BYTE_SIZE);
+	int next_block = bytes_to_int(index_block + offset*PTR_BYTE_SIZE);
 
 	free(index_block);
 
@@ -163,7 +163,7 @@ int inode_read(
 
 	bytes_read += len;
 	base += bytes_read;
-	size_left -= bytes_read;
+	size_left -= len;
 
 	while (size_left > 0) {
 		block_offset += 1;
@@ -188,7 +188,7 @@ int inode_read(
 
 		bytes_read += len;
 		base += bytes_read;
-		size_left -= bytes_read;
+		size_left -= len;
 	}
 
 	free(block);
@@ -378,7 +378,8 @@ int inode_write(
 	BYTE *block = alloc_buffer(sb->blockSize);
 	if (block_number == -2) {
 		logdebug("inode_write: allocating more space");
-		inode_add_block(&inode, index, block_offset, sb);
+		inode_add_block(index, &inode, block_offset, sb);
+		block_number = inode_get_block_number(&inode, block_offset, sb);
 	}
 
 	if (fetch_block(block_number, block, sb) != 0) {
@@ -393,6 +394,7 @@ int inode_write(
 	unsigned int len = umin(size_left, sb->blockSize*SECTOR_SIZE);
 	memcpy(block + inf, buffer + base, len);
 
+
 	if (write_block(block_number, block, sb) != 0) {
 		loginfo("inode_write: couldn't write a block");
 		flogdebug("inode_write: inode %d, block offset %u", index, block_offset);
@@ -402,7 +404,7 @@ int inode_write(
 
 	bytes_written += len;
 	base += bytes_written;
-	size_left -= bytes_written;
+	size_left -= len;
 
 	while (size_left > 0) {
 		block_offset += 1;
@@ -410,12 +412,15 @@ int inode_write(
 
 		if (block_number < 0) {
 			logdebug("inode_write: allocating more space");
-			inode_add_block(&inode, index, block_offset, sb);
+			inode_add_block(index, &inode, block_offset, sb);
+			block_number = inode_get_block_number(&inode, block_offset, sb);
 		}
 
 		if (fetch_block(block_number, block, sb) != 0) {
 			loginfo("inode_write: couldn't fetch a block");
 			flogdebug("inode_write: inode %d, block offset %u", index, block_offset);
+			flogdebug("inode_write: block_number %d, offset %u", block_number, inf);
+			flogdebug("inode_write: len: %u", len);
 			free(block);
 			return bytes_written;
 		}
@@ -431,10 +436,9 @@ int inode_write(
 			return bytes_written;
 		}
 
-
 		bytes_written += len;
 		base += bytes_written;
-		size_left -= bytes_written;
+		size_left -= len;
 	}
 
 	free(block);
@@ -455,40 +459,40 @@ int inode_write(
 // * there is an invalid pointer o the way, -3 if offset is off limits.
 // */
 int inode_add_block(
-	struct t2fs_inode *inode,
 	int index,
+	struct t2fs_inode *inode,
 	unsigned int offset,
 	struct t2fs_superbloco *sb
-) { return -1; }
-//	unsigned int dir = NUM_INODE_DIRECT_PTRS;
-//	unsigned int sind = NUM_INODE_SINGLE_IND_PTRS;
-//	unsigned int dind = NUM_INODE_DOUBLE_IND_PTRS;
-//	unsigned int ppb = sb->blockSize*SECTOR_SIZE/PTR_BYTE_SIZE;
-//
-//	if (offset < dir) {
-//		return inode_add_block_direct(inode, index, offset, sb);
-//	} else if (offset < dir + sind*ppb) {
-//		return inode_add_block_direct(inode, index, offset - dir, sb);
-//	} else if (offset < dir + sind*ppb + dind*ppb*ppb) {
-//		return inode_add_block_direct(inode, index, offset - dir - sind*ppb, sb);
-//	} else {
-//		logwarning("inode_add_block: invalid offset");
-//		return -3;
-//	}
-//}
-//
-///**
-// * inide_add_block_direct() - add a block to direct pointers
-// * @inode: inode struct
-// * @offset: block offset inside inode
-// * @sb: pointer to superblock structure
-// *
-// * Return: 0 if succeeds, -1 if there are no more blocks in the disk, -2 if
-// * there is an invalid pointer o the way, -3 if offset is off limits.
-// */
+) {
+	unsigned int dir = NUM_INODE_DIRECT_PTRS;
+	unsigned int sind = NUM_INODE_SINGLE_IND_PTRS;
+	unsigned int dind = NUM_INODE_DOUBLE_IND_PTRS;
+	unsigned int ppb = sb->blockSize*SECTOR_SIZE/PTR_BYTE_SIZE;
+
+	if (offset < dir) {
+		return inode_add_block_direct(index, inode, offset, sb);
+	} else if (offset < dir + sind*ppb) {
+		return inode_add_block_single_ind(index, inode, offset - dir, sb);
+	} else if (offset < dir + sind*ppb + dind*ppb*ppb) {
+		return -1;//inode_add_block_direct(index, inode, offset - dir - sind*ppb, sb);
+	} else {
+		logwarning("inode_add_block: invalid offset");
+		return -3;
+	}
+}
+
+/**
+ * inide_add_block_direct() - add a block to direct pointers
+ * @inode: inode struct
+ * @offset: block offset inside inode
+ * @sb: pointer to superblock structure
+ *
+ * Return: 0 if succeeds, -1 if there are no more blocks in the disk, -2 if
+ * there is an invalid pointer o the way, -3 if offset is off limits.
+ */
 int inode_add_block_direct(
-	struct t2fs_inode *inode,
 	int index,
+	struct t2fs_inode *inode,
 	unsigned int offset,
 	struct t2fs_superbloco *sb
 ) {
@@ -497,9 +501,40 @@ int inode_add_block_direct(
 	if (data_block_number < 0) {
 		return -1;
 	}
+
 	inode->dataPtr[offset] = data_block_number;
 
 	return update_inode(index, inode, sb);
+}
+
+int inode_add_block_single_ind(
+	int index,
+	struct t2fs_inode *inode,
+	unsigned int offset,
+	struct t2fs_superbloco *sb
+) {
+	if (inode->singleIndPtr == INVALID_PTR) {
+		inode->singleIndPtr = new_index_block(sb);
+	}
+
+	unsigned int data_block_number = new_index_block(sb);
+
+	if (data_block_number < 0) {
+		return -1;
+	}
+
+	if (add_pointer_to_index_block(
+		inode->singleIndPtr,
+		data_block_number,
+		offset,
+		sb
+	) != 0) {
+		return -1;
+	}
+
+
+	int err = update_inode(index, inode, sb);
+	return err;
 }
 
 /* update inode in disk. returns 0 if successful and -1 otherwise. */

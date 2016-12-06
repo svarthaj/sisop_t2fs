@@ -159,8 +159,31 @@ int inode_write(
 );
 
 int inode_add_block(
-	struct t2fs_inode *inode,
 	int index,
+	struct t2fs_inode *inode,
+	unsigned int offset,
+	struct t2fs_superbloco *sb
+);
+
+/**
+ * inide_add_block_direct() - add a block to direct pointers
+ * @inode: inode struct
+ * @offset: block offset inside inode
+ * @sb: pointer to superblock structure
+ *
+ * Return: 0 if succeeds, -1 if there are no more blocks in the disk, -2 if
+ * there is an invalid pointer o the way, -3 if offset is off limits.
+ */
+int inode_add_block_direct(
+	int index,
+	struct t2fs_inode *inode,
+	unsigned int offset,
+	struct t2fs_superbloco *sb
+);
+
+int inode_add_block_single_ind(
+	int index,
+	struct t2fs_inode *inode,
 	unsigned int offset,
 	struct t2fs_superbloco *sb
 );
