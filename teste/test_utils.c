@@ -38,6 +38,22 @@ void test_bytes_to_word() {
 	assert(bytes_to_word(baz) == 0x0101);
 }
 
+void test_word_to_bytes() {
+	BYTE buffer[2];
+    WORD w1 = 0x0000;
+    WORD w2 = 0x0002;
+    WORD w3 = 0x0101;
+
+	word_to_bytes(w1, buffer);
+	assert(bytes_to_word(buffer) == w1);
+	
+    word_to_bytes(w2, buffer);
+	assert(bytes_to_word(buffer) == w2);
+	
+    word_to_bytes(w3, buffer);
+	assert(bytes_to_word(buffer) == w3);      
+}
+
 void test_bytes_to_int() {
 	BYTE foo[] = {0, 0, 0, 0};
 	BYTE bar[] = {2, 0, 0, 0};
@@ -67,6 +83,22 @@ void test_bytes_to_dword() {
 	assert(bytes_to_dword(baz) == 0x00000101);
 }
 
+void test_dword_to_bytes() {
+	BYTE buffer[4];
+    WORD dw1 = 0x00000000;
+    WORD dw2 = 0x00000002;
+    WORD dw3 = 0x00000101;
+
+	dword_to_bytes(dw1, buffer);
+	assert(bytes_to_dword(buffer) == dw1);
+	
+    dword_to_bytes(dw2, buffer);
+	assert(bytes_to_dword(buffer) == dw2);
+	
+    dword_to_bytes(dw3, buffer);
+    assert(bytes_to_dword(buffer) == dw3);      
+}
+
 void test_bytes_to_record() {
 	struct t2fs_record record;
 	BYTE buffer[64] = {
@@ -88,6 +120,32 @@ void test_bytes_to_record() {
 	assert(record.blocksFileSize == 0x00000101);
 	assert(record.bytesFileSize == 0x03000000);
 	assert(record.inodeNumber == 0x00000100);
+}
+
+void test_record_to_bytes() {
+	struct t2fs_record record;
+	record.TypeVal = 0x01;
+	record.name[0] = 't';
+	record.name[1] = 'e';
+	record.name[2] = 's';
+	record.name[3] = 't';
+	record.blocksFileSize = 0x00000101;
+	record.bytesFileSize = 0x03000000;
+	record.inodeNumber = 0x00000100;
+	
+	BYTE proof[64] = {
+		0x01,
+		't','e','s','t',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',
+		1, 1, 0, 0,
+		0, 0, 0, 3,
+		0, 1, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	};
+    
+    BYTE buffer[64];
+
+    record_to_bytes(record, buffer);
+    assert(memcmp(proof, buffer, 44) == 0);
 }
 
 void test_sane_path() {
@@ -215,11 +273,14 @@ int main(int argc, const char *argv[])
 {
 	test_reverse_endianess();
 	test_bytes_to_word();
+	test_word_to_bytes();
 	test_bytes_to_dword();
+    test_dword_to_bytes();
 	test_bytes_to_int();
 	test_int_to_bytes();
 	test_max_min();
     test_bytes_to_record();
+    test_record_to_bytes();
 	test_sane_path();
     test_split_path();
 	test_find_record();

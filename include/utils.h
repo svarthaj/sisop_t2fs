@@ -82,6 +82,7 @@ void reverse_endianess(BYTE *buffer, int len);
  * Return: a WORD
  */
 WORD bytes_to_word(BYTE *buffer);
+int word_to_bytes(WORD w, BYTE *buffer);
 
 /**
  * bytes_to_dword() - return dword represented by bytes array
@@ -92,6 +93,7 @@ WORD bytes_to_word(BYTE *buffer);
  * Return: a DWORD
  */
 DWORD bytes_to_dword(BYTE *buffer);
+int dword_to_bytes(DWORD dw, BYTE *buffer);
 
 /**
  * bytes_to_int() - return int represented by bytes array
@@ -114,6 +116,7 @@ int int_to_bytes(int i, BYTE *buffer);
  * Return: a record structure.
  */
 struct t2fs_record bytes_to_record(BYTE *buffer);
+int record_to_bytes(struct t2fs_record record, BYTE *buffer);
 
 /**
  * find_record() - find the record of a file
