@@ -8,11 +8,11 @@
 #include "open_file.h"
 #include "list.h"
 
-unsigned int num_handles = -1;
+FILE2 num_handles = -1;
 
 struct list *open_files = NULL;
 
-int create_open_file(
+FILE2 create_open_file(
     char *filename,
     struct t2fs_record *full_record,
     unsigned int parent_inode_index,
@@ -51,10 +51,10 @@ int create_open_file(
     append_list(open_files, new);
     first_list(open_files);
     
-    return 0;
+    return new->handle; 
 }
 
-int destroy_open_file(unsigned int handle){
+int destroy_open_file(FILE2 handle){
     if(open_files == NULL){
         logwarning("destroy_open_file. no file open, cannot destroy handle");
         return -1;   

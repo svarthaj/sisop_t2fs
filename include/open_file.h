@@ -4,7 +4,7 @@
 #include "t2fs.h"
 
 // unique identifier for open files. incremented when file is opened
-extern unsigned int num_handles;
+extern FILE2 num_handles;
 
 // open files list
 extern struct list *open_files;
@@ -18,7 +18,7 @@ extern struct list *open_files;
  * full_record: pointer to the t2fs_record entry for the file
 */
 struct open_file {  
-    unsigned int handle;
+    FILE2 handle;
     unsigned int file_offset;
     unsigned int parent_inode_index;
     unsigned int record_offset;
@@ -36,9 +36,9 @@ struct open_file {
  * Checks if file is not open. Case not, creates new strucutre for open_file
  * and stores it the open_files list. 
  *
- * Returns: 0 if succeds, -1 otherwise.
+ * Returns: valid handle if succeds, -1 otherwise.
  */   
-int create_open_file(
+FILE2 create_open_file(
     char *filename,
     struct t2fs_record *full_record,
     unsigned int parent_inode_index,
@@ -53,6 +53,6 @@ int create_open_file(
  * Returns: 0 if succeds, -1 otherwise.
  */
 int destroy_open_file(
-    unsigned int handle);
+    FILE2 handle);
 
 #endif /* ifndef OPEN_FILE_H */

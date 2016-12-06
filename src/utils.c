@@ -282,14 +282,14 @@ struct list *split_path(char *path) {
 	}
 
     struct list *path_list = create_list();
-
+    
+    flogdebug("path = %s", path);
     char *tok;
 	tok = strtok(path, "/");
 	while(tok != NULL){
 		append_list(path_list, tok);
 		tok = strtok(NULL, "/");
 	}
-
 	first_list(path_list);
 	return path_list;
 }
