@@ -7,7 +7,10 @@ TESTS := $(patsubst %,teste/test_%.out,$(TESTS))
 CC := gcc -Wall -std=c99 -I ./include
 
 .PHONY: all test restore_disk clean
-all:
+all: lib/libt2fs.a
+
+lib/libt2fs.a: $(OBJECTS)
+	ar -cvq lib/libt2fs.a $(OBJECTS)
 
 test: $(TESTS)
 

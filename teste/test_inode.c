@@ -92,6 +92,7 @@ void test_inode_find_record() {
 	assert(record.TypeVal == 0x01);
 	assert(offset == 0);
 	assert(inode_find_record(0, "sub", &offset, &record, &sb) == 0);
+	print_record(&record);
 	assert(record.TypeVal == 0x02);
 	assert(offset == RECORD_BYTE_SIZE);
 }

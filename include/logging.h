@@ -1,7 +1,7 @@
 #ifndef LOGGING_H
 #define LOGGING_H
 
-#define LOGLEVEL 5
+#define LOGLEVEL 0
 #define LVL_DEBUG 5
 #define LVL_INFO 4
 #define LVL_WARNING 3

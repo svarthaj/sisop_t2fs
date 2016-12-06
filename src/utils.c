@@ -123,7 +123,7 @@ WORD bytes_to_word(BYTE *buffer) {
 
 int word_to_bytes(WORD w, BYTE *buffer) {
 	BYTE tmp[2];
-    
+
     for(int j = 0; j < 2; j++)
 	    tmp[j] = (w>>(8-j*8)) & 0xFF;
 
@@ -151,7 +151,7 @@ DWORD bytes_to_dword(BYTE *buffer) {
 
 int dword_to_bytes(DWORD dw, BYTE *buffer) {
 	BYTE tmp[4];
-    
+
     for(int j = 0; j < 4; j++)
 	    tmp[j] = (dw>>(24-j*8)) & 0xFF;
 
@@ -233,6 +233,10 @@ int sane_path(char *path)
 {
 	int len = strlen(path);
 
+	if (len == 1 && path[len - 1] == '/') {
+		return 0;
+	}
+
 	if (path[len - 1] == '/') {
 		logwarning("sane_path: path must not have trailing slash");
 		return -1;
@@ -282,8 +286,7 @@ struct list *split_path(char *path) {
 	}
 
     struct list *path_list = create_list();
-    
-    flogdebug("path = %s", path);
+
     char *tok;
 	tok = strtok(path, "/");
 	while(tok != NULL){
@@ -332,9 +335,10 @@ int find_record(
 	*ip = 0; // start on root
 
 	first_list(names);
-	inode_find_record(*ip, getnode_list(names), offset, record, sb);
 
+	inode_find_record(*ip, getnode_list(names), offset, record, sb);
 	next_list(names);
+
 	while (names->it != NULL) {
 		if (record->TypeVal == 0x00) {
 			*ip = -1;
@@ -344,6 +348,7 @@ int find_record(
 
 		*ip = record->inodeNumber;
 		inode_find_record(*ip, getnode_list(names), offset, record, sb);
+		next_list(names);
 	}
 
 	return 0;

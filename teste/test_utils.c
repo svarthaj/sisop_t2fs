@@ -46,12 +46,12 @@ void test_word_to_bytes() {
 
 	word_to_bytes(w1, buffer);
 	assert(bytes_to_word(buffer) == w1);
-	
+
     word_to_bytes(w2, buffer);
 	assert(bytes_to_word(buffer) == w2);
-	
+
     word_to_bytes(w3, buffer);
-	assert(bytes_to_word(buffer) == w3);      
+	assert(bytes_to_word(buffer) == w3);
 }
 
 void test_bytes_to_int() {
@@ -91,12 +91,12 @@ void test_dword_to_bytes() {
 
 	dword_to_bytes(dw1, buffer);
 	assert(bytes_to_dword(buffer) == dw1);
-	
+
     dword_to_bytes(dw2, buffer);
 	assert(bytes_to_dword(buffer) == dw2);
-	
+
     dword_to_bytes(dw3, buffer);
-    assert(bytes_to_dword(buffer) == dw3);      
+    assert(bytes_to_dword(buffer) == dw3);
 }
 
 void test_bytes_to_record() {
@@ -132,7 +132,7 @@ void test_record_to_bytes() {
 	record.blocksFileSize = 0x00000101;
 	record.bytesFileSize = 0x03000000;
 	record.inodeNumber = 0x00000100;
-	
+
 	BYTE proof[64] = {
 		0x01,
 		't','e','s','t',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',
@@ -141,7 +141,7 @@ void test_record_to_bytes() {
 		0, 1, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 	};
-    
+
     BYTE buffer[64];
 
     record_to_bytes(record, buffer);
@@ -151,8 +151,7 @@ void test_record_to_bytes() {
 void test_sane_path() {
 	logwarning("ignore warning below");
 	assert(sane_path("") == -1);
-	logwarning("ignore warning below");
-	assert(sane_path("/") == -1);
+	assert(sane_path("/") == 0);
 	logwarning("ignore warning below");
 	assert(sane_path("/foo//") == -1);
 	logwarning("ignore warning below");
@@ -193,7 +192,7 @@ void test_split_path(){
 	// free(pathname);
 	destroy_list(path_list);
 
-    char broken_path[] = "/";
+    char broken_path[] = "//";
 	logwarning("ignore warning below");
     struct list *broken_list = split_path(broken_path);
     assert(broken_list == NULL);

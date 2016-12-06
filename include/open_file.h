@@ -17,12 +17,13 @@ extern struct list *open_files;
  * record_offset: offset of the file t2fs_record in the parent directory
  * full_record: pointer to the t2fs_record entry for the file
 */
-struct open_file {  
+struct open_file {
     FILE2 handle;
+	char *filename;
     unsigned int file_offset;
-    unsigned int parent_inode_index;
+    int parent_inode_index;
     unsigned int record_offset;
-    struct t2fs_record *full_record;
+    struct t2fs_record full_record;
 };
 
 /*
@@ -34,25 +35,28 @@ struct open_file {
  * @record_offset: offset of the file t2fs_record in the parent dir.
  *
  * Checks if file is not open. Case not, creates new strucutre for open_file
- * and stores it the open_files list. 
+ * and stores it the open_files list.
  *
  * Returns: valid handle if succeds, -1 otherwise.
- */   
+ */
 FILE2 create_open_file(
     char *filename,
     struct t2fs_record *full_record,
-    unsigned int parent_inode_index,
-    unsigned int record_offset);
+    int parent_inode_index,
+    unsigned int record_offset
+);
 
 /*
  * destroy_open_file() - destroy entry for open_file in the list.
  * @handle: unique identifier of the file
  *
- * Search for `handle` in the open_files list. If file is open, removes it. 
+ * Search for `handle` in the open_files list. If file is open, removes it.
  *
  * Returns: 0 if succeds, -1 otherwise.
  */
 int destroy_open_file(
     FILE2 handle);
+
+int get_open_file(FILE2 handle, struct open_file **file);
 
 #endif /* ifndef OPEN_FILE_H */

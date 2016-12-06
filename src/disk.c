@@ -51,6 +51,7 @@ int fetch_inode(
 	if (inode_number < 0
 	    || inode_number >= sb->inodeAreaSize*inodes_per_sector
 		|| getBitmap2(BITMAP_INODE, inode_number) == 0) {
+		flogdebug("fetch_inode: inode_number: %d, bitmap: %d", inode_number, getBitmap2(BITMAP_INODE, inode_number));
 		logwarning("fetch_inode: invalid inode number");
 		return -1;
 	}

@@ -7,86 +7,32 @@
 #include "t2fs.h"
 #include "list.h"
 
-void test_create_open_file(){
-    char *names[3] = { "foo", "bar", "foobar" };
+void test_create_get_open_file(){
+	struct t2fs_record rec;
+	FILE2 handle = create_open_file("/foo", &rec, 0, 0);
 
-    struct t2fs_record file_record[3];
-
-    for(int i = 0; i < 3; i++ ){
-        memcpy(file_record[i].name, names[i], sizeof(file_record[i].name));
-    }
-
-    assert(open_files == NULL);
-
-    create_open_file(names[0], file_record, 0, 0);
-    struct open_file *aux = getnode_list(open_files);
-    assert(aux->handle == 0);
-    assert(memcmp(aux->full_record->name, names, sizeof(aux->full_record->name)));
-    assert(aux->parent_inode_index == 0);
-    assert(aux->record_offset == 0);
-    
-    create_open_file(names[0], file_record, 0, 0);
-    aux = getnode_list(open_files);
-    assert(aux->handle == 0);
-    assert(memcmp(aux->full_record->name, names, sizeof(aux->full_record->name)));
-    assert(aux->parent_inode_index == 0);
-    assert(aux->record_offset == 0);
-
-    create_open_file(names[1], file_record+1, 1, 1);
-    next_list(open_files);
-    aux = getnode_list(open_files);
-    assert(aux->handle == 1);
-    assert(memcmp(aux->full_record->name, names+1, sizeof(aux->full_record->name)));
-    assert(aux->parent_inode_index == 1);
-    assert(aux->record_offset == 1);
-    
-    create_open_file(names[2], file_record+2, 2, 2);
-    next_list(open_files);
-    next_list(open_files);
-    aux = getnode_list(open_files);
-    assert(aux->handle == 2);
-    assert(memcmp(aux->full_record->name, names+2, sizeof(aux->full_record->name)));
-    assert(aux->parent_inode_index == 2);
-    assert(aux->record_offset == 2);
+	struct open_file *file;
+	assert(get_open_file(handle, &file) == 0);
+	assert(strcmp(file->filename, "/foo") == 0);
+	logdebug("try to get non open file");
+	assert(get_open_file(100, &file) == -1);
 }
 
 void test_destroy_open_file(){
-    char *names[3] = { "foo", "bar", "foobar" };
+	struct t2fs_record rec;
+	FILE2 handle = create_open_file("/bar", &rec, 0, 0);
 
-    struct t2fs_record file_record[3];
-
-    for(int i = 0; i < 3; i++ ){
-        memcpy(file_record[i].name, names[i], sizeof(file_record[i].name));
-    }
-
-    create_open_file(names[0], file_record, 0, 0);
-    
-    create_open_file(names[0], file_record, 0, 0);
-
-    create_open_file(names[1], file_record+1, 1, 1);
-    
-    create_open_file(names[2], file_record+2, 2, 2);
-    
-    first_list(open_files);
-
-    
-    assert(destroy_open_file(0) == 0);
-    assert(destroy_open_file(0) == -1);
-    assert(destroy_open_file(2) == 0);
-    assert(destroy_open_file(3) == -1);;
-    
-    create_open_file(names[0], file_record, 0, 0);
-    next_list(open_files);
-    struct open_file *aux = getnode_list(open_files);
-    assert(aux->handle == 3);
-    assert(memcmp(aux->full_record->name, names, sizeof(aux->full_record->name)));
-    assert(aux->parent_inode_index == 0);
-    assert(aux->record_offset == 0);
-
+	struct open_file *file;
+	assert(destroy_open_file(handle) == 0);
+	logdebug("try to get non open file");
+	assert(get_open_file(handle, &file) == -1);
+	logwarning("try to destroy non open file");
+	assert(destroy_open_file(handle) == -1);
 }
 
 int main(int argc, const char *argv[]) {
-    test_create_open_file();
+	// lembrar de usar nomes diferentes para os arquivos de cada teste
+    test_create_get_open_file();
     test_destroy_open_file();
 
     return 0;
