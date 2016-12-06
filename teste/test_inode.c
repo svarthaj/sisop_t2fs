@@ -206,6 +206,23 @@ void test_inode_write() {
     assert(memcmp(block_written, block_read, size) == 0);
 }
 
+void test_add_pointer_to_index_block() {
+	struct t2fs_superbloco sb = get_suberblock();
+	int iblock = new_index_block(&sb);
+	int dblock = new_data_block(&sb);
+
+	add_pointer_to_index_block(iblock, dblock, 0, &sb);
+
+	BYTE *block = alloc_buffer(sb.blockSize);
+	if (fetch_block(iblock, block, &sb) != 0) {
+		logerror("test_add_pointer_to_index_block: fetching block");
+		exit(1);
+	}
+
+	assert(bytes_to_int(block) == dblock);
+	assert(bytes_to_int(block + PTR_BYTE_SIZE) == INVALID_PTR);
+}
+
 int main(int argc, const char *argv[])
 {
 	test_inode_follow_once();
@@ -215,7 +232,8 @@ int main(int argc, const char *argv[])
 	test_inode_find_free_record();
 	test_new_free_inode();
 	test_inode_read();
-	test_inode_write();
+//	test_inode_write();
+	test_add_pointer_to_index_block();
 
 	return 0;
 }

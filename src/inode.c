@@ -486,24 +486,55 @@ int inode_add_block(
 // * Return: 0 if succeeds, -1 if there are no more blocks in the disk, -2 if
 // * there is an invalid pointer o the way, -3 if offset is off limits.
 // */
-//int inode_add_block_direct(
-//	struct t2fs_inode *inode,
-//	int index;
-//	unsigned int offset,
-//	struct t2fs_superbloco *sb
-//) {
-//	//unsigned int data_block_number = new_index_block();
-//	inode->direct[offset] = data_block_number;
-//
-//	//update_inode(index, inode);
-//
-//	return -1;
-//}
+int inode_add_block_direct(
+	struct t2fs_inode *inode,
+	int index,
+	unsigned int offset,
+	struct t2fs_superbloco *sb
+) {
+	unsigned int data_block_number = new_index_block(sb);
+
+	if (data_block_number < 0) {
+		return -1;
+	}
+	inode->dataPtr[offset] = data_block_number;
+
+	return update_inode(index, inode, sb);
+}
 
 /* update inode in disk. returns 0 if successful and -1 otherwise. */
 int update_inode(
+	int index,
 	struct t2fs_inode *inode,
-	int index
+	struct t2fs_superbloco *sb
 ) {
+	return write_inode(index, inode, sb);
+}
+
+int add_pointer_to_index_block(
+	int index_block_number,
+	int data_block_number,
+	unsigned int offset,
+	struct t2fs_superbloco *sb
+){
+	BYTE *iblock = alloc_buffer(sb->blockSize);
+
+	if (fetch_block(index_block_number, iblock, sb) != 0) {
+		logerror("add_pointer_to_index_block: fetching block");
+		return -1;
+	}
+
+	BYTE *ptr = (BYTE *)malloc(PTR_BYTE_SIZE*sizeof(BYTE));
+	int_to_bytes(data_block_number, ptr);
+	memcpy(iblock + offset*PTR_BYTE_SIZE, ptr, PTR_BYTE_SIZE);
+
+	if (write_block(index_block_number, iblock, sb) != 0) {
+		logerror("add_pointer_to_index_block: writing block");
+		return -1;
+	}
+
+	free(iblock);
+	free(ptr);
+
 	return 0;
 }
